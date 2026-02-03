@@ -1,95 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Login - Dossier Médical Militaire</title>
+<meta charset="UTF-8">
+<title>Connexion Médicale</title>
 <style>
-:root{--primary:#e11d48;--primary-light:#fee2e2;--primary-dark:#991b1b;--border:#fecaca;--shadow:0 6px 18px rgba(225,29,72,0.08);--danger:#dc2626;--success:#16a34a;--warning:#ea580c}
-body{font-family:Inter,system-ui;margin:0;background:url('https://i.imgur.com/A6V1lhN.jpg') no-repeat center center fixed;background-size:cover;color:#1f1f1f;position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center}
-body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.68);backdrop-filter:blur(4px);z-index:-1}
-.card{background:rgba(255,255,255,0.88);padding:32px;border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border);backdrop-filter:blur(10px);width:400px}
-h2{text-align:center;color:var(--primary-dark)}
-label{display:block;margin-top:12px;font-weight:600;font-size:14px;color:var(--primary-dark)}
-input{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;font-size:14px}
-button.primary{background:var(--primary);color:white;padding:12px;width:100%;border:0;border-radius:10px;cursor:pointer;font-weight:600;transition:0.2s;margin-top:20px}
-button.primary:hover{background:var(--primary-dark)}
-.error{color:var(--danger);margin:10px 0;padding:12px;background:#fee;border:1px solid #fecaca;border-radius:10px;font-size:14px;text-align:center}
+body {
+  font-family: Arial, sans-serif;
+  background:#0f172a;
+  color:#e5e7eb;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.card {
+  background:#020617;
+  padding:25px;
+  border-radius:12px;
+  width:320px;
+}
+input, button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+}
+button {
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+button.secondary {
+  background:#334155;
+}
 </style>
 </head>
 <body>
+
 <div class="card">
-  <h2>Connexion Médic</h2>
-  <form id="loginForm">
-    <label>Nom d'utilisateur</label>
-    <input type="text" id="username" required>
-    <label>Mot de passe</label>
-    <input type="password" id="password" required>
-    <div id="loginError" class="error" style="display:none;"></div>
-    <button class="primary" type="submit">Se connecter</button>
-  </form>
-  <button id="viewOwnBtn" class="primary" style="margin-top:16px;background:var(--success)">Visualiser son dossier médical</button>
+  <h2>🩺 Connexion Médic</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Mot de passe">
+  <button onclick="login()">Se connecter</button>
+
+  <hr style="margin:20px 0;">
+
+  <button class="secondary" onclick="viewer()">
+    👤 Visualiser mon dossier médical
+  </button>
 </div>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-const supabase = createClient("https://sevrfgivcpefyykuffti.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc")
-document.getElementById('loginForm').onsubmit = async e => {
-  e.preventDefault()
-  const username = document.getElementById('username').value.trim()
-  const password = document.getElementById('password').value.trim()
-  const { data, error } = await supabase.from('users').select('*').eq('username', username)
-  if (error || !data.length || data[0].password !== password) {
-    document.getElementById('loginError').textContent = 'Identifiants incorrects'
-    document.getElementById('loginError').style.display = 'block'
-    return
-  }
-  localStorage.setItem('sams_user', JSON.stringify({id: data[0].id, user: username, permission: data[0].permission}))
-  window.location.href = 'index.html'
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyeo31L1H09ZbPy2AOmty1cYWbz_ffU1pAH0C9S6MjjNPdkw0rSCrKUCm9uFRsPVKaL/exec";
+
+function login(){
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"login",
+      username:username.value,
+      password:password.value
+    })
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(!d.ok) return alert("Connexion refusée");
+    localStorage.setItem("user", username.value);
+    localStorage.setItem("permission", d.permission);
+    location.href="index.html";
+  });
 }
-document.getElementById('viewOwnBtn').onclick = () => showViewModal()
-function showViewModal() {
-  const modal = document.createElement('div')
-  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000`
-  modal.innerHTML = `<div class="card" style="width:400px"><h3 style="color:var(--primary)">Visualiser dossier</h3><label>Prénom Nom ID</label><input id="ownName"><button class="ghost" id="nextBtn" style="margin-top:10px">Suivant</button><div id="codeSection" style="display:none;"><label>Entrez le code (envoyé sur Discord)</label><input id="codeInput"><button class="primary" id="verifyBtn" style="margin-top:10px">Vérifier</button></div><button class="ghost" style="margin-top:10px" onclick="this.closest('[style*=fixed]').remove()">Annuler</button><div id="viewError" class="error" style="display:none;margin-top:10px;"></div></div>`
-  document.body.appendChild(modal)
-  document.getElementById('nextBtn').onclick = async () => {
-    const name = document.getElementById('ownName').value.trim()
-    const { data: dossier } = await supabase.from('dossiers').select('*').eq('patientNameId', name)
-    if (!dossier.length) {
-      document.getElementById('viewError').textContent = 'Dossier non trouvé'
-      document.getElementById('viewError').style.display = 'block'
-      return
-    }
-    const d = dossier[0]
-    const today = new Date().toDateString()
-    let { data: codeRecord } = await supabase.from('codes').select('*').eq('dossier_id', d.id).eq('date', today)
-    let code
-    if (!codeRecord.length) {
-      code = Math.random().toString(36).substring(2, 8).toUpperCase()
-      await supabase.from('codes').insert({dossier_id: d.id, code, date: today, expiration: new Date(Date.now() + 24*60*60*1000).toISOString()})
-      alert(`Code envoyé à votre Discord (simulation pour RP): ${code}`) // Remplacez par envoi réel si bot intégré
-    } else {
-      alert('Code déjà généré aujourd\'hui, vérifiez votre Discord (simulation)')
-    }
-    document.getElementById('nextBtn').style.display = 'none'
-    document.getElementById('codeSection').style.display = 'block'
-  }
-  document.getElementById('verifyBtn').onclick = async () => {
-    const name = document.getElementById('ownName').value.trim()
-    const entered = document.getElementById('codeInput').value.trim()
-    const { data: dossier } = await supabase.from('dossiers').select('id').eq('patientNameId', name)
-    const dId = dossier[0].id
-    const today = new Date().toDateString()
-    const { data: codeData } = await supabase.from('codes').select('code').eq('dossier_id', dId).eq('date', today)
-    if (codeData.length && entered === codeData[0].code) {
-      localStorage.setItem('viewOnly', JSON.stringify({id: dId}))
-      window.location.href = 'index.html'
-    } else {
-      document.getElementById('viewError').textContent = 'Code incorrect'
-      document.getElementById('viewError').style.display = 'block'
-    }
-  }
+
+function viewer(){
+  const nom = prompt("Nom Prénom");
+  if(!nom) return;
+
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({action:"sendCode", nom})
+  }).then(()=>{
+    const code = prompt("Code reçu sur Discord");
+    fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"verify", nom, code})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.ok) return alert("Code invalide");
+      localStorage.setItem("viewer", JSON.stringify(d));
+      location.href="index.html";
+    });
+  });
 }
 </script>
+
 </body>
 </html>

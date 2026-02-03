@@ -3,244 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <title>Dossiers Médicaux</title>
-
 <link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
-
 <style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
-
+body{margin:0;background:#0e1117;color:white;font-family:Arial}
 header{
-  background:#020617;
-  padding:15px 25px;
+  background:#161b22;
+  padding:15px;
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  gap:15px;
 }
-.header-left{display:flex;align-items:center;gap:15px}
-.header-left img{width:45px}
-
-.container{padding:25px}
-
 button{
-  background:#2563eb;
+  background:#238636;
+  border:none;
   color:white;
-  border:none;
-  padding:10px 14px;
-  border-radius:8px;
+  padding:8px 12px;
+  border-radius:5px;
   cursor:pointer;
-  font-weight:bold;
 }
-button:disabled{opacity:.6}
-
-input,select,textarea{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-  margin-bottom:10px;
-}
-
 .card{
-  background:#020617;
-  padding:20px;
-  border-radius:14px;
-  margin-bottom:20px;
-  box-shadow:0 0 20px rgba(0,0,0,.4);
+  background:#161b22;
+  margin:15px;
+  padding:15px;
+  border-radius:10px;
 }
-
 .entry{
-  border-left:5px solid;
-  padding:10px;
-  margin-top:10px;
-}
-.soin{border-color:#dc2626}
-.vaccin{border-color:#16a34a}
-.visite{border-color:#ca8a04}
-
-.badge{
-  font-size:12px;
-  font-weight:bold;
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-.modal-content{
-  background:#020617;
-  padding:25px;
-  width:400px;
-  border-radius:14px;
+  background:#0e1117;
+  padding:8px;
+  margin:5px 0;
+  border-left:4px solid #238636;
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <div class="header-left">
-    <img src="https://i.imgur.com/ZtAo0te.png">
-    <div id="status"></div>
-  </div>
-  <button onclick="logout()">Déconnexion</button>
+  <img src="https://i.imgur.com/ZtAo0te.png" width="40">
+  <h2>Dossiers Médicaux</h2>
+  <button onclick="newDossier()">+ Nouveau dossier</button>
 </header>
 
-<div class="container">
-  <input id="search" placeholder="🔎 Rechercher un dossier" oninput="render()">
-
-  <button id="newBtn" onclick="openCreate()">➕ Nouveau dossier</button>
-
-  <div id="list"></div>
-</div>
-
-<!-- MODAL CRÉATION DOSSIER -->
-<div class="modal" id="createModal">
-  <div class="modal-content">
-    <h3>Nouveau dossier médical</h3>
-    <input id="newNom" placeholder="Nom Prénom">
-    <input id="newPhoto" placeholder="Lien Imgur carte ID">
-    <input id="newDiscord" placeholder="ID Discord">
-    <button onclick="createDossier()">Créer</button>
-    <button onclick="closeCreate()">Annuler</button>
-  </div>
-</div>
-
-<!-- MODAL AJOUT -->
-<div class="modal" id="addModal">
-  <div class="modal-content">
-    <h3>Ajouter une entrée</h3>
-
-    <select id="type" onchange="changeForm()"></select>
-
-    <div id="form"></div>
-
-    <button onclick="submitEntry()">Enregistrer</button>
-    <button onclick="closeAdd()">Annuler</button>
-  </div>
-</div>
+<div id="list"></div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
+const API = "https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
+const perm = localStorage.getItem("perm");
+const user = localStorage.getItem("user");
+const viewer = localStorage.getItem("viewer");
 
-const user=localStorage.getItem("user");
-const permission=localStorage.getItem("permission");
-const viewer=localStorage.getItem("viewer");
+function api(p){
+  return fetch(API+"?"+new URLSearchParams(p)).then(r=>r.json());
+}
 
-let dossiers=[], current=null;
-
-if(!user&&!viewer) location.href="login.html";
-status.innerText=viewer?"👁️ Consultation citoyen":`🩺 ${user} (${permission})`;
-
-newBtn.style.display=permission?"inline-block":"none";
-
-fetch(API,{method:"POST",body:JSON.stringify({action:"list"})})
-.then(r=>r.json()).then(d=>{dossiers=d;render();});
-
-function render(){
-  list.innerHTML="";
-  dossiers.filter(d=>d.nom.toLowerCase().includes(search.value.toLowerCase()))
-  .forEach(d=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
-      <h2>${d.nom}</h2>
-      <img src="${d.photo}" width="180"><br><br>
-
-      ${d.entries.map(e=>{
-        let c=e.contenu;
-        return `
-        <div class="entry ${e.type}">
-          <span class="badge">${e.type.toUpperCase()}</span><br>
-          ${Object.entries(c).map(([k,v])=>`${k} : ${v}`).join("<br>")}
-          <br><i>Ajouté par : ${e.auteur}</i>
-        </div>`;
-      }).join("")}
-
-      ${permission?`<br><button onclick="openAdd('${d.nom}')">➕ Ajouter une entrée</button>`:""}
-    `;
-    list.appendChild(div);
+function load(){
+  api({action:"list"}).then(d=>{
+    list.innerHTML="";
+    d.forEach(ds=>{
+      if(viewer && ds.nom!==viewer) return;
+      const div=document.createElement("div");
+      div.className="card";
+      div.innerHTML=`
+        <h3>${ds.nom}</h3>
+        <img src="${ds.photo}" width="120"><br>
+        ${(perm?"<button onclick=\"add('"+ds.id+"')\">Ajouter</button>":"")}
+      `;
+      ds.entries.forEach(e=>{
+        div.innerHTML+=`
+          <div class="entry">
+            <b>${e.type}</b> — ${e.auteur}<br>
+            ${JSON.stringify(e.data)}<br>
+            <small>${e.date}</small>
+          </div>`;
+      });
+      list.appendChild(div);
+    });
   });
 }
 
-function openCreate(){createModal.style.display="flex"}
-function closeCreate(){createModal.style.display="none"}
-
-function createDossier(){
-  fetch(API,{method:"POST",body:JSON.stringify({
-    action:"create",
-    nom:newNom.value,
-    photo:newPhoto.value,
-    discord:newDiscord.value
-  })}).then(()=>location.reload());
+function newDossier(){
+  const nom=prompt("Nom Prénom");
+  const photo=prompt("Lien Imgur");
+  const discord=prompt("ID Discord");
+  api({
+    action:"new",
+    nom, photo, discord
+  }).then(load);
 }
 
-function openAdd(nom){
-  current=nom;
-  addModal.style.display="flex";
-
-  type.innerHTML="";
-  type.add(new Option("Faits de soin","soin"));
-  if(permission==="medic-chef"){
-    type.add(new Option("Vaccin","vaccin"));
-    type.add(new Option("Visite médicale","visite"));
-  }
-  changeForm();
-}
-
-function closeAdd(){addModal.style.display="none"}
-
-function changeForm(){
-  if(type.value==="soin"){
-    form.innerHTML=`
-      <textarea id="b" placeholder="Blessures"></textarea>
-      <textarea id="i" placeholder="Interventions"></textarea>
-      <input id="inv" placeholder="Temps d'invalidation (optionnel)">
-    `;
-  }
-  if(type.value==="vaccin"){
-    form.innerHTML=`
-      <input id="n" placeholder="Nom vaccin">
-      <input id="d" placeholder="Dose">
-      <input id="but" placeholder="But">
-    `;
-  }
-  if(type.value==="visite"){
-    form.innerHTML=`
-      <input id="m" placeholder="Médecin">
-      <input id="date" type="date">
-      <select id="e"><option>Positive</option><option>Négative</option></select>
-    `;
-  }
-}
-
-function submitEntry(){
-  let contenu={};
-  if(type.value==="soin")
-    contenu={blessures:b.value,interventions:i.value,invalidation:inv.value};
-  if(type.value==="vaccin")
-    contenu={nom:n.value,dose:d.value,but:but.value};
-  if(type.value==="visite")
-    contenu={medecin:m.value,date:date.value,evaluation:e.value};
-
-  fetch(API,{method:"POST",body:JSON.stringify({
+function add(id){
+  const type=prompt("Type (soin/vaccin/visite)");
+  const data=prompt("Données");
+  api({
     action:"add",
-    nom:current,
-    type:type.value,
-    contenu,
-    auteur:user
-  })}).then(()=>location.reload());
+    id,
+    type,
+    auteur:user,
+    data
+  }).then(load);
 }
 
-function logout(){
-  localStorage.clear();
-  location.href="login.html";
-}
+load();
 </script>
-
 </body>
 </html>

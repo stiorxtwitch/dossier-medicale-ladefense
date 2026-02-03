@@ -2,13 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Connexion Médicale</title>
-<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
+<title>Connexion</title>
+
 <style>
 body{
   background:#0e1117;
-  color:#fff;
-  font-family:Arial;
+  color:white;
+  font-family:Arial, sans-serif;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -16,15 +16,15 @@ body{
 }
 .box{
   background:#161b22;
-  padding:30px;
+  padding:25px;
   border-radius:10px;
   width:320px;
   text-align:center;
 }
-input,button{
+input, button{
   width:100%;
   padding:10px;
-  margin:8px 0;
+  margin:6px 0;
   border-radius:5px;
   border:none;
 }
@@ -33,73 +33,98 @@ button{
   color:white;
   cursor:pointer;
 }
-button:hover{opacity:.8}
-.loading{display:none}
+hr{margin:15px 0}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <img src="https://i.imgur.com/ZtAo0te.png" width="80"><br><br>
+  <h2>Connexion</h2>
 
-  <input id="user" placeholder="Username">
-  <input id="pass" type="password" placeholder="Password">
-  <button onclick="login()">Connexion</button>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="doLogin()">Login</button>
 
   <hr>
 
-  <input id="nomCode" placeholder="Nom Prénom">
-  <button onclick="sendCode()">Recevoir un code</button>
+  <input id="nom" placeholder="Nom Prénom">
+  <button onclick="sendCode()">Recevoir code Discord</button>
 
   <input id="code" placeholder="Code reçu">
-  <button onclick="verify()">Accéder au dossier</button>
-
-  <p class="loading" id="load">⏳ Chargement...</p>
+  <button onclick="verify()">Accéder</button>
 </div>
 
 <script>
 const API = "https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
 
-function api(params){
-  const url = API + "?" + new URLSearchParams(params);
-  return fetch(url).then(r => r.json());
+/* ======================
+   JSONP CORE
+====================== */
+function jsonp(params){
+  const cb = "cb_" + Math.random().toString(36).substring(2);
+  params.callback = cb;
+
+  return new Promise(resolve=>{
+    window[cb] = data => {
+      resolve(data);
+      delete window[cb];
+    };
+
+    const s = document.createElement("script");
+    s.src = API + "?" + new URLSearchParams(params).toString();
+    document.body.appendChild(s);
+  });
 }
 
-function login(){
-  document.getElementById("load").style.display="block";
-  api({
+/* ======================
+   LOGIN
+====================== */
+async function doLogin(){
+  const r = await jsonp({
     action:"login",
-    username:user.value,
-    password:pass.value
-  }).then(r=>{
-    document.getElementById("load").style.display="none";
-    if(r.ok){
-      localStorage.setItem("perm", r.permission);
-      localStorage.setItem("user", user.value);
-      location.href="index.html";
-    } else alert("Connexion refusée");
+    username: username.value,
+    password: password.value
   });
+
+  if(r.ok){
+    localStorage.setItem("user", username.value);
+    localStorage.setItem("perm", r.permission);
+    alert("Connecté !");
+    location.href = "index.html";
+  } else {
+    alert("Identifiants incorrects");
+  }
 }
 
-function sendCode(){
-  api({
+/* ======================
+   CODE DISCORD
+====================== */
+async function sendCode(){
+  await jsonp({
     action:"sendCode",
-    nom: nomCode.value
-  }).then(()=>alert("Code envoyé sur Discord"));
+    nom: nom.value
+  });
+  alert("Code envoyé sur Discord");
 }
 
-function verify(){
-  api({
+/* ======================
+   VERIFY
+====================== */
+async function verify(){
+  const r = await jsonp({
     action:"verify",
-    nom: nomCode.value,
+    nom: nom.value,
     code: code.value
-  }).then(r=>{
-    if(r.ok){
-      localStorage.setItem("viewer", nomCode.value);
-      location.href="index.html";
-    } else alert("Code invalide");
   });
+
+  if(r.ok){
+    localStorage.setItem("viewer", nom.value);
+    location.href = "index.html";
+  } else {
+    alert("Code invalide");
+  }
 }
 </script>
+
 </body>
 </html>

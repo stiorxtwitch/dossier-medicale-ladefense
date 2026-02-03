@@ -2,132 +2,104 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Accès Médical</title>
-
+<title>Connexion Médicale</title>
 <link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
-
 <style>
-*{box-sizing:border-box}
 body{
-  margin:0;
-  height:100vh;
+  background:#0e1117;
+  color:#fff;
+  font-family:Arial;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#020617,#0f172a);
-  font-family:Arial,sans-serif;
-  color:#e5e7eb;
+  height:100vh;
 }
-.card{
-  width:360px;
-  background:#020617;
+.box{
+  background:#161b22;
   padding:30px;
-  border-radius:14px;
-  box-shadow:0 0 40px rgba(0,0,0,.6);
+  border-radius:10px;
+  width:320px;
   text-align:center;
-}
-.logo{
-  width:120px;
-  margin-bottom:15px;
 }
 input,button{
   width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:8px;
+  padding:10px;
+  margin:8px 0;
+  border-radius:5px;
   border:none;
-}
-input{
-  background:#020617;
-  color:white;
-  border:1px solid #334155;
 }
 button{
-  background:#2563eb;
+  background:#238636;
   color:white;
   cursor:pointer;
-  font-weight:bold;
 }
-button:disabled{
-  opacity:.6;
-  cursor:not-allowed;
-}
-hr{
-  border:none;
-  border-top:1px solid #334155;
-  margin:25px 0;
-}
+button:hover{opacity:.8}
+.loading{display:none}
 </style>
 </head>
-
 <body>
 
-<div class="card">
-  <img src="https://i.imgur.com/ZtAo0te.png" class="logo" alt="Logo">
+<div class="box">
+  <img src="https://i.imgur.com/ZtAo0te.png" width="80"><br><br>
 
-  <h2>Service Médical</h2>
-
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Mot de passe">
-  <button id="loginBtn" onclick="login()">Connexion</button>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Connexion</button>
 
   <hr>
 
-  <h3>Accès citoyen</h3>
-  <input id="nom" placeholder="Nom Prénom">
-  <input id="code" placeholder="Code Discord">
-  <button id="codeBtn" onclick="sendCode()">Recevoir le code</button>
-  <button id="verifyBtn" onclick="verify()">Valider</button>
+  <input id="nomCode" placeholder="Nom Prénom">
+  <button onclick="sendCode()">Recevoir un code</button>
+
+  <input id="code" placeholder="Code reçu">
+  <button onclick="verify()">Accéder au dossier</button>
+
+  <p class="loading" id="load">⏳ Chargement...</p>
 </div>
 
 <script>
-const API="https://script.google.com/macros/s/AKfycbym1G5HzrOmRPn0_33SZXpshUzNitMh2DOzDNDCYUSsx83aGG93WuFPvdPwhV3Mhn_Y/exec";
+const API = "https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
 
-function setLoading(btn,state){
-  btn.disabled=state;
-  btn.innerText=state?"Chargement...":btn.dataset.text;
+function api(params){
+  const url = API + "?" + new URLSearchParams(params);
+  return fetch(url).then(r => r.json());
 }
-document.querySelectorAll("button").forEach(b=>b.dataset.text=b.innerText);
 
 function login(){
-  setLoading(loginBtn,true);
-  fetch(API,{method:"POST",body:JSON.stringify({
-    action:"login",username:username.value,password:password.value
-  })})
-  .then(r=>r.json())
-  .then(d=>{
-    setLoading(loginBtn,false);
-    if(!d.ok) return alert("Connexion refusée");
-    localStorage.setItem("user",username.value);
-    localStorage.setItem("permission",d.permission);
-    location.href="index.html";
+  document.getElementById("load").style.display="block";
+  api({
+    action:"login",
+    username:user.value,
+    password:pass.value
+  }).then(r=>{
+    document.getElementById("load").style.display="none";
+    if(r.ok){
+      localStorage.setItem("perm", r.permission);
+      localStorage.setItem("user", user.value);
+      location.href="index.html";
+    } else alert("Connexion refusée");
   });
 }
 
 function sendCode(){
-  setLoading(codeBtn,true);
-  fetch(API,{method:"POST",body:JSON.stringify({
-    action:"sendCode",nom:nom.value
-  })}).then(()=>{
-    setLoading(codeBtn,false);
-    alert("Code envoyé sur Discord");
-  });
+  api({
+    action:"sendCode",
+    nom: nomCode.value
+  }).then(()=>alert("Code envoyé sur Discord"));
 }
 
 function verify(){
-  setLoading(verifyBtn,true);
-  fetch(API,{method:"POST",body:JSON.stringify({
-    action:"verify",nom:nom.value,code:code.value
-  })})
-  .then(r=>r.json())
-  .then(d=>{
-    setLoading(verifyBtn,false);
-    if(!d.ok) return alert("Code invalide");
-    localStorage.setItem("viewer",JSON.stringify(d));
-    location.href="index.html";
+  api({
+    action:"verify",
+    nom: nomCode.value,
+    code: code.value
+  }).then(r=>{
+    if(r.ok){
+      localStorage.setItem("viewer", nomCode.value);
+      location.href="index.html";
+    } else alert("Code invalide");
   });
 }
 </script>
-
 </body>
 </html>

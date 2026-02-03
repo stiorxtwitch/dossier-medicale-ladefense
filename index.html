@@ -5,55 +5,56 @@
 <title>Dossiers Médicaux</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:#0f172a;
-  color:#e5e7eb;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial;background:#0f172a;color:#e5e7eb}
 header{
   background:#020617;
-  padding:15px;
+  padding:15px 25px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-.container{padding:20px}
+.container{padding:25px}
 .card{
   background:#020617;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
+  padding:20px;
+  border-radius:14px;
+  margin-bottom:20px;
+  box-shadow:0 0 20px rgba(0,0,0,.4);
 }
 button{
   background:#2563eb;
   color:white;
   border:none;
-  padding:8px 12px;
-  border-radius:6px;
+  padding:8px 14px;
+  border-radius:8px;
   cursor:pointer;
 }
-input, select, textarea{
+button:disabled{opacity:.6}
+input,textarea,select{
   width:100%;
-  margin-top:6px;
-  padding:8px;
-  border-radius:6px;
+  margin-top:8px;
+  padding:10px;
+  border-radius:8px;
   border:none;
 }
-textarea{resize:vertical}
-.tag{
-  padding:4px 8px;
+.entry{
+  border-left:4px solid;
+  padding:10px;
+  margin-top:10px;
+}
+.soin{border-color:#dc2626}
+.vaccin{border-color:#16a34a}
+.visite{border-color:#ca8a04}
+.badge{
+  padding:3px 8px;
   border-radius:6px;
   font-size:12px;
+  font-weight:bold;
 }
-.soin{background:#dc2626}
-.vaccin{background:#16a34a}
-.visite{background:#ca8a04}
 .hidden{display:none}
-hr{border:0;border-top:1px solid #334155;margin:10px 0}
 </style>
 </head>
-
 <body>
 
 <header>
@@ -62,178 +63,66 @@ hr{border:0;border-top:1px solid #334155;margin:10px 0}
 </header>
 
 <div class="container">
-
   <input id="search" placeholder="🔎 Rechercher un dossier" oninput="render()">
   <br><br>
-  <button onclick="showNewDossier()">➕ Nouveau dossier</button>
-
-  <!-- NOUVEAU DOSSIER -->
-  <div id="newDossier" class="card hidden">
-    <h3>Nouveau dossier médical</h3>
-    <input id="nd_nom" placeholder="Nom Prénom">
-    <input id="nd_photo" placeholder="Lien Imgur carte d'identité">
-    <input id="nd_discord" placeholder="ID Discord">
-    <button onclick="createDossier()">Créer</button>
-  </div>
-
   <div id="list"></div>
-
-</div>
-
-<!-- FORMULAIRE AJOUT -->
-<div id="formEntry" class="card hidden">
-  <h3>Ajouter une entrée</h3>
-
-  <select id="entryType" onchange="switchForm()">
-    <option value="">-- Sélectionner --</option>
-    <option value="soin">Faits de soin</option>
-    <option value="vaccin">Vaccin</option>
-    <option value="visite">Visite médicale</option>
-  </select>
-
-  <!-- SOIN -->
-  <div id="formSoin" class="hidden">
-    <textarea id="blessures" placeholder="Résumé des blessures"></textarea>
-    <textarea id="interventions" placeholder="Résumé des interventions"></textarea>
-    <input id="invalidation" placeholder="Temps d'invalidation (optionnel)">
-  </div>
-
-  <!-- VACCIN -->
-  <div id="formVaccin" class="hidden">
-    <input id="vaccin_nom" placeholder="Nom du vaccin">
-    <input id="vaccin_dose" placeholder="N° de dose">
-    <input id="vaccin_but" placeholder="But">
-  </div>
-
-  <!-- VISITE -->
-  <div id="formVisite" class="hidden">
-    <input id="visite_medecin" placeholder="Nom du médecin">
-    <input id="visite_date" placeholder="Date">
-    <select id="visite_eval">
-      <option value="">Évaluation</option>
-      <option value="positive">Positive</option>
-      <option value="négative">Négative</option>
-    </select>
-  </div>
-
-  <br>
-  <button onclick="submitEntry()">Enregistrer</button>
-  <button onclick="closeForm()">Annuler</button>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyuOiBP0pv6cKeHIYVPGaq-MaMVU0nL64eg_Kxoict3H8YE6zx16-oefEPLuX8IbTw4/exec";
+const API="https://script.google.com/macros/s/AKfycbyuOiBP0pv6cKeHIYVPGaq-MaMVU0nL64eg_Kxoict3H8YE6zx16-oefEPLuX8IbTw4/exec";
+const user=localStorage.getItem("user");
+const permission=localStorage.getItem("permission");
+const viewer=localStorage.getItem("viewer");
 
-const user = localStorage.getItem("user");
-const permission = localStorage.getItem("permission");
-const viewer = localStorage.getItem("viewer");
+let dossiers=[];
 
-let dossiers = [];
-let currentDossier = null;
+if(!user&&!viewer) location.href="login.html";
+status.innerText=viewer?"👁️ Consultation citoyen":`🩺 ${user} (${permission})`;
 
-if(!user && !viewer) location.href="login.html";
-
-status.innerText = viewer
- ? "👁️ Consultation citoyen (lecture seule)"
- : `🩺 ${user} (${permission})`;
-
-if(viewer){
- dossiers = JSON.parse(viewer);
- render();
-}else{
- fetch(API,{method:"POST",body:JSON.stringify({action:"list"})})
- .then(r=>r.json()).then(d=>{dossiers=d;render();});
-}
+fetch(API,{method:"POST",body:JSON.stringify({action:"list"})})
+.then(r=>r.json()).then(d=>{dossiers=d;render();});
 
 function render(){
- list.innerHTML="";
- const q = search.value.toLowerCase();
- dossiers.filter(d=>d.nom.toLowerCase().includes(q))
- .forEach(d=>{
-   const div=document.createElement("div");
-   div.className="card";
-   div.innerHTML=`
-     <h3>${d.nom}</h3>
-     <img src="${d.photo}" width="200"><hr>
-     ${d.entries.map(e=>`
-       <span class="tag ${e.type}">${e.type}</span>
-       <b>${e.auteur}</b><br>
-       ${JSON.stringify(e.contenu)}<hr>
-     `).join("")}
-     ${viewer?"":`<button onclick="openForm('${d.id}')">➕ Ajouter une entrée</button>`}
-   `;
-   list.appendChild(div);
- });
-}
-
-function showNewDossier(){
- document.getElementById("newDossier").classList.toggle("hidden");
-}
-
-function createDossier(){
- fetch(API,{method:"POST",body:JSON.stringify({
- action:"new",
- nom:nd_nom.value,
- photo:nd_photo.value,
- discord:nd_discord.value
- })}).then(()=>location.reload());
-}
-
-function openForm(id){
- currentDossier=id;
- formEntry.classList.remove("hidden");
-}
-
-function closeForm(){
- formEntry.classList.add("hidden");
- entryType.value="";
- switchForm();
-}
-
-function switchForm(){
- formSoin.classList.add("hidden");
- formVaccin.classList.add("hidden");
- formVisite.classList.add("hidden");
-
- if(entryType.value==="soin") formSoin.classList.remove("hidden");
- if(entryType.value==="vaccin") formVaccin.classList.remove("hidden");
- if(entryType.value==="visite") formVisite.classList.remove("hidden");
-}
-
-function submitEntry(){
- let data={action:"add",id:currentDossier,type:entryType.value,auteur:user,data:{}};
-
- if(entryType.value==="soin"){
-   data.data={
-     blessures:blessures.value,
-     interventions:interventions.value,
-     invalidation:invalidation.value
-   };
- }
- if(entryType.value==="vaccin"){
-   if(permission!=="medic-chef") return alert("Réservé medic-chef");
-   data.data={
-     nom:vaccin_nom.value,
-     dose:vaccin_dose.value,
-     but:vaccin_but.value
-   };
- }
- if(entryType.value==="visite"){
-   if(permission!=="medic-chef") return alert("Réservé medic-chef");
-   data.data={
-     medecin:visite_medecin.value,
-     date:visite_date.value,
-     evaluation:visite_eval.value
-   };
- }
-
- fetch(API,{method:"POST",body:JSON.stringify(data)})
- .then(()=>location.reload());
+  list.innerHTML="";
+  const q=search.value.toLowerCase();
+  dossiers.filter(d=>d.nom.toLowerCase().includes(q))
+  .forEach(d=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <h2>${d.nom}</h2>
+      <img src="${d.photo}" width="180"><br><br>
+      ${d.entries.map(e=>{
+        let c=e.contenu;
+        if(e.type==="vaccin")
+          return `<div class="entry vaccin">
+            <span class="badge">💉 Vaccin</span><br>
+            <b>${c.nom}</b> – Dose ${c.dose}<br>
+            But : ${c.but}
+          </div>`;
+        if(e.type==="soin")
+          return `<div class="entry soin">
+            <span class="badge">🩹 Soin</span><br>
+            Blessures : ${c.blessures}<br>
+            Interventions : ${c.interventions}<br>
+            Invalidation : ${c.invalidation||"—"}
+          </div>`;
+        if(e.type==="visite")
+          return `<div class="entry visite">
+            <span class="badge">📋 Visite médicale</span><br>
+            Médecin : ${c.medecin}<br>
+            Date : ${c.date}<br>
+            Évaluation : ${c.evaluation}
+          </div>`;
+      }).join("")}
+    `;
+    list.appendChild(div);
+  });
 }
 
 function logout(){
- localStorage.clear();
- location.href="login.html";
+  localStorage.clear();
+  location.href="login.html";
 }
 </script>
 

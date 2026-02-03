@@ -13,138 +13,158 @@ body{
   font-family:Arial;
   padding:20px;
 }
-h2{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.card{
+.dossier{
   background:#161b22;
-  padding:15px;
+  padding:12px;
   border-radius:10px;
-  margin-bottom:12px;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+.popup{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+.box{
+  background:#161b22;
+  padding:20px;
+  width:500px;
+  max-height:80vh;
+  overflow:auto;
+  border-radius:12px;
 }
 .entry{
-  background:#0d1117;
-  padding:6px;
-  margin-top:5px;
+  padding:8px;
   border-radius:6px;
-  font-size:13px;
+  margin-top:5px;
 }
-input,button{
-  padding:6px;
+.soin{background:#7d1f1f}
+.vaccin{background:#1f3f7d}
+.visite{background:#1f7d3a}
+
+input,select,textarea,button{
+  width:100%;
+  padding:8px;
   margin:4px 0;
   border-radius:6px;
   border:none;
 }
-input{
-  background:#0d1117;
-  color:white;
-  border:1px solid #30363d;
-}
+textarea{resize:none;height:60px}
 button{
   background:#238636;
   color:white;
   cursor:pointer;
 }
-button:hover{
-  background:#2ea043;
-}
-img{
-  width:40px;
-}
+button:hover{background:#2ea043}
 </style>
 </head>
 
 <body>
 
-<h2>
-  <img src="https://i.imgur.com/ZtAo0te.png">
-  Dossiers médicaux
-</h2>
-
-<!-- CRÉATION DOSSIER -->
-<div class="card">
-  <h4>Créer un dossier</h4>
-  <input id="nom" placeholder="Nom">
-  <input id="photo" placeholder="URL photo (Imgur)">
-  <button onclick="newDossier()">Créer</button>
-</div>
+<h2>Dossiers médicaux</h2>
 
 <div id="list"></div>
 
+<div class="popup" id="popup">
+  <div class="box">
+    <h3 id="popName"></h3>
+    <img id="popImg" width="150"><br><br>
+
+    <div id="entries"></div>
+
+    <div id="addZone"></div>
+
+    <button onclick="closePop()">Fermer</button>
+  </div>
+</div>
+
 <script>
 const WEB_APP = "https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
-const user = localStorage.user || "inconnu";
+const mode = localStorage.mode || "medic";
+const user = localStorage.user || "civil";
+const nomCivil = localStorage.nomCivil || "";
 
-/* ===== JSONP ===== */
-function jsonp(params){
-  return new Promise(resolve=>{
-    const cb = "cb_" + Math.random().toString(36).substring(2);
-    params.callback = cb;
+let dossiers = [];
 
-    window[cb] = data => {
-      resolve(data);
-      delete window[cb];
-      script.remove();
-    };
-
-    const script = document.createElement("script");
-    script.src = WEB_APP + "?" + new URLSearchParams(params);
-    document.body.appendChild(script);
+/* JSONP */
+function jsonp(p){
+  return new Promise(r=>{
+    const cb="cb_"+Math.random().toString(36).substring(2);
+    p.callback=cb;
+    window[cb]=d=>{r(d);delete window[cb];s.remove();}
+    const s=document.createElement("script");
+    s.src=WEB_APP+"?"+new URLSearchParams(p);
+    document.body.appendChild(s);
   });
 }
 
-/* ===== LOAD ===== */
+/* LOAD */
 async function load(){
-  const data = await jsonp({ action:"list" });
-  list.innerHTML = "";
+  dossiers = await jsonp({action:"list"});
+  list.innerHTML="";
 
-  data.forEach(d=>{
-    let html = `
-      <div class="card">
-        <h3>${d.nom}</h3>
-        <img src="${d.photo}" width="120"><br>
-    `;
+  dossiers.forEach(d=>{
+    if(mode==="civil" && d.nom!==nomCivil) return;
 
-    d.entries.forEach(e=>{
-      html += `
-        <div class="entry">
-          <b>${e.type}</b> — ${e.auteur}<br>
-          ${e.texte}<br>
-          <small>${e.date}</small>
-        </div>
-      `;
-    });
-
-    html += `
-      <input id="t${d.id}" placeholder="Type (soin, vaccin...)">
-      <input id="c${d.id}" placeholder="Contenu">
-      <button onclick="add('${d.id}')">Ajouter</button>
+    list.innerHTML+=`
+      <div class="dossier" onclick="openPop('${d.id}')">
+        ${d.nom}
       </div>
     `;
-
-    list.innerHTML += html;
   });
+
+  if(mode==="civil" && dossiers.length){
+    openPop(dossiers.find(d=>d.nom===nomCivil).id);
+  }
 }
 
-/* ===== NEW DOSSIER ===== */
-function newDossier(){
-  if(!nom.value) return alert("Nom requis");
-  jsonp({
-    action:"new",
-    nom:nom.value,
-    photo:photo.value
-  }).then(load);
+/* POPUP */
+function openPop(id){
+  const d = dossiers.find(x=>x.id==id);
+  popName.innerText = d.nom;
+  popImg.src = d.photo;
+  entries.innerHTML="";
+
+  d.entries.forEach(e=>{
+    entries.innerHTML+=`
+      <div class="entry ${e.type}">
+        <b>${e.type.toUpperCase()}</b><br>
+        ${e.texte}<br>
+        <small>${e.auteur} – ${e.date}</small>
+      </div>
+    `;
+  });
+
+  if(mode==="medic"){
+    addZone.innerHTML=`
+      <select id="type">
+        <option value="soin">Fait de soin</option>
+        <option value="vaccin">Vaccin</option>
+        <option value="visite">Visite médicale</option>
+      </select>
+      <textarea id="text" placeholder="Détails"></textarea>
+      <button onclick="add('${id}')">Ajouter</button>
+    `;
+  }else addZone.innerHTML="";
+
+  popup.style.display="flex";
 }
 
-/* ===== ADD ENTRY ===== */
+function closePop(){
+  popup.style.display="none";
+}
+
+/* ADD */
 function add(id){
   jsonp({
     action:"add",
-    id:id,
-    type:document.getElementById("t"+id).value,
-    text:document.getElementById("c"+id).value,
+    id,
+    type:type.value,
+    text:text.value,
     user:user
   }).then(load);
 }

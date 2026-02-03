@@ -1,104 +1,67 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Dossiers Médicaux</title>
-<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
+<title>Dossiers</title>
 <style>
-body{margin:0;background:#0e1117;color:white;font-family:Arial}
-header{
-  background:#161b22;
-  padding:15px;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-button{
-  background:#238636;
-  border:none;
-  color:white;
-  padding:8px 12px;
-  border-radius:5px;
-  cursor:pointer;
-}
-.card{
-  background:#161b22;
-  margin:15px;
-  padding:15px;
-  border-radius:10px;
-}
-.entry{
-  background:#0e1117;
-  padding:8px;
-  margin:5px 0;
-  border-left:4px solid #238636;
-}
+body{background:#0d1117;color:white;font-family:Arial;padding:20px}
+.card{background:#161b22;padding:15px;border-radius:10px;margin-bottom:10px}
+button{padding:6px}
 </style>
 </head>
 <body>
 
-<header>
-  <img src="https://i.imgur.com/ZtAo0te.png" width="40">
-  <h2>Dossiers Médicaux</h2>
-  <button onclick="newDossier()">+ Nouveau dossier</button>
-</header>
+<h2>Dossiers médicaux</h2>
+
+<input id="nom" placeholder="Nom">
+<input id="photo" placeholder="Photo URL">
+<button onclick="newDossier()">Créer dossier</button>
 
 <div id="list"></div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
-const perm = localStorage.getItem("perm");
-const user = localStorage.getItem("user");
-const viewer = localStorage.getItem("viewer");
+const WEB_APP="https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
+const user=localStorage.user||"inconnu";
 
-function api(p){
-  return fetch(API+"?"+new URLSearchParams(p)).then(r=>r.json());
+function jsonp(p){
+  return new Promise(r=>{
+    const cb="cb"+Math.random();
+    p.callback=cb;
+    window[cb]=d=>{r(d);delete window[cb];};
+    const s=document.createElement("script");
+    s.src=WEB_APP+"?"+new URLSearchParams(p);
+    document.body.appendChild(s);
+  });
 }
 
-function load(){
-  api({action:"list"}).then(d=>{
-    list.innerHTML="";
-    d.forEach(ds=>{
-      if(viewer && ds.nom!==viewer) return;
-      const div=document.createElement("div");
-      div.className="card";
-      div.innerHTML=`
-        <h3>${ds.nom}</h3>
-        <img src="${ds.photo}" width="120"><br>
-        ${(perm?"<button onclick=\"add('"+ds.id+"')\">Ajouter</button>":"")}
-      `;
-      ds.entries.forEach(e=>{
-        div.innerHTML+=`
-          <div class="entry">
-            <b>${e.type}</b> — ${e.auteur}<br>
-            ${JSON.stringify(e.data)}<br>
-            <small>${e.date}</small>
-          </div>`;
-      });
-      list.appendChild(div);
+async function load(){
+  const d=await jsonp({action:"list"});
+  list.innerHTML="";
+  d.forEach(x=>{
+    let h=`<div class="card"><b>${x.nom}</b>`;
+    x.entries.forEach(e=>{
+      h+=`<div>${e.type} – ${e.auteur} – ${e.date}</div>`;
     });
+    h+=`
+    <input placeholder="Type" id="t${x.id}">
+    <input placeholder="Texte" id="c${x.id}">
+    <button onclick="add('${x.id}')">Ajouter</button>
+    </div>`;
+    list.innerHTML+=h;
   });
 }
 
 function newDossier(){
-  const nom=prompt("Nom Prénom");
-  const photo=prompt("Lien Imgur");
-  const discord=prompt("ID Discord");
-  api({
-    action:"new",
-    nom, photo, discord
-  }).then(load);
+  jsonp({action:"new", nom:nom.value, photo:photo.value}).then(load);
 }
 
 function add(id){
-  const type=prompt("Type (soin/vaccin/visite)");
-  const data=prompt("Données");
-  api({
+  jsonp({
     action:"add",
     id,
-    type,
-    auteur:user,
-    data
+    type:document.getElementById("t"+id).value,
+    text:document.getElementById("c"+id).value,
+    user
   }).then(load);
 }
 

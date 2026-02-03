@@ -73,9 +73,16 @@ textarea{resize:none;height:70px}
 
 <script>
 const WEB_APP="https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
-const mode=localStorage.mode||"civil";
-const user=localStorage.user||"inconnu";
-const nomCivil=localStorage.nomCivil||"";
+
+/* 🔐 NORMALISATION ROLE */
+let rawRole = (localStorage.role || localStorage.mode || "civil").toLowerCase();
+
+let role = "civil";
+if(rawRole.includes("chef")) role = "medic-chef";
+else if(rawRole.includes("medic")) role = "medic";
+
+const user = localStorage.user || "Inconnu";
+const nomCivil = localStorage.nomCivil || "";
 
 let dossiers=[];
 
@@ -100,17 +107,18 @@ function showLoading(){
 async function load(){
   dossiers=await jsonp({action:"list"});
   list.innerHTML="";
+  createZone.innerHTML="";
 
-  if(mode!=="civil"){
-    createZone.innerHTML=`<button onclick="openCreate()">➕ Créer un dossier</button><br><br>`;
+  if(role!=="civil"){
+    createZone.innerHTML=`<button onclick="openCreate()">➕ Créer un dossier médical</button><br><br>`;
   }
 
   dossiers.forEach(d=>{
-    if(mode==="civil" && d.nom!==nomCivil) return;
+    if(role==="civil" && d.nom!==nomCivil) return;
     list.innerHTML+=`<div class="dossier" onclick="openPop('${d.id}')">${d.nom}</div>`;
   });
 
-  if(mode==="civil"){
+  if(role==="civil"){
     const d=dossiers.find(x=>x.nom===nomCivil);
     if(d) openPop(d.id);
   }
@@ -130,7 +138,7 @@ function openPop(id){
       </div>`;
   });
 
-  if(mode!=="civil") renderForm(id);
+  if(role!=="civil") renderForm(id);
   else addZone.innerHTML="";
 
   popup.style.display="flex";
@@ -138,9 +146,12 @@ function openPop(id){
 
 function renderForm(id){
   let options=`<option value="soin">Soins</option>`;
-  if(mode==="medic-chef"){
-    options+=`<option value="vaccin">Vaccin</option>
-              <option value="visite">Visite médicale</option>`;
+
+  if(role==="medic-chef"){
+    options+=`
+      <option value="vaccin">Vaccin</option>
+      <option value="visite">Visite médicale</option>
+    `;
   }
 
   addZone.innerHTML=`
@@ -157,7 +168,7 @@ function formChange(){
     form.innerHTML=`
       <input id="v_nom" placeholder="Nom du vaccin">
       <input id="v_dose" placeholder="N° Dose">
-      <input id="v_but" placeholder="But">
+      <input id="v_but" placeholder="But du vaccin">
     `;
   }
   if(t==="soin"){

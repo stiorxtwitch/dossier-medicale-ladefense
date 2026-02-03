@@ -4,46 +4,104 @@
 <meta charset="UTF-8">
 <title>Dossiers Médicaux</title>
 
+<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
+
 <style>
-body{background:#0d1117;color:white;font-family:Arial;padding:20px}
-button{background:#238636;color:white;border:none;padding:8px;border-radius:6px;cursor:pointer}
+body{
+  background:#0d1117;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+h2{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+button{
+  background:#238636;
+  color:white;
+  border:none;
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+}
 button:hover{background:#2ea043}
-input,textarea,select{
-  width:100%;padding:8px;margin:5px 0;
-  background:#0d1117;color:white;
-  border:1px solid #30363d;border-radius:6px
+input,select,textarea{
+  width:100%;
+  padding:8px;
+  margin:5px 0;
+  border-radius:6px;
+  border:1px solid #30363d;
+  background:#0d1117;
+  color:white;
 }
 textarea{resize:none;height:70px}
 
-.dossier{background:#161b22;padding:12px;border-radius:10px;margin-bottom:10px;cursor:pointer}
+.dossier{
+  background:#161b22;
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+}
 
-.popup,.loading{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;justify-content:center;align-items:center;z-index:10
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:10;
 }
 .box{
-  background:#161b22;padding:20px;
-  width:520px;max-height:85vh;
-  overflow:auto;border-radius:12px
+  background:#161b22;
+  padding:20px;
+  width:520px;
+  max-height:85vh;
+  overflow:auto;
+  border-radius:12px;
 }
 
-.entry{padding:8px;border-radius:6px;margin-top:6px;font-size:14px}
+.entry{
+  padding:8px;
+  border-radius:6px;
+  margin-top:6px;
+  font-size:14px;
+}
 .soin{background:#7d1f1f}
 .vaccin{background:#1f3f7d}
 .visite{background:#1f7d3a}
 
-.loading img{width:120px}
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:20;
+}
+.loading img{
+  width:120px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Dossiers Médicaux</h2>
+<h2>
+  <img src="https://i.imgur.com/ZtAo0te.png" width="40">
+  Dossiers Médicaux
+</h2>
 
+<!-- BOUTON CRÉATION (MEDIC SEULEMENT) -->
 <div id="createZone"></div>
+
 <div id="list"></div>
 
+<!-- POPUP DOSSIER -->
 <div class="popup" id="popup">
   <div class="box">
     <h3 id="popName"></h3>
@@ -56,40 +114,37 @@ textarea{resize:none;height:70px}
   </div>
 </div>
 
+<!-- POPUP CRÉATION DOSSIER -->
 <div class="popup" id="createPop">
   <div class="box">
     <h3>Créer un dossier médical</h3>
+
     <input id="c_nom" placeholder="Nom de la personne">
     <input id="c_discord" placeholder="ID Discord lié">
-    <input id="c_photo" placeholder="URL Imgur (CI)">
-    <button onclick="createDossier()">Créer</button>
+    <input id="c_photo" placeholder="URL Imgur (carte d'identité)">
+
+    <button onclick="createDossier()">Créer le dossier</button>
     <button onclick="closeCreate()">Annuler</button>
   </div>
 </div>
 
+<!-- LOADING -->
 <div class="loading" id="loading">
   <img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif">
 </div>
 
 <script>
-const WEB_APP="https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
-
-/* 🔐 NORMALISATION ROLE */
-let rawRole = (localStorage.role || localStorage.mode || "civil").toLowerCase();
-
-let role = "civil";
-if(rawRole.includes("chef")) role = "medic-chef";
-else if(rawRole.includes("medic")) role = "medic";
-
-const user = localStorage.user || "Inconnu";
+const WEB_APP = "https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
+const mode = localStorage.mode || "medic";
+const user = localStorage.user || "inconnu";
 const nomCivil = localStorage.nomCivil || "";
 
-let dossiers=[];
+let dossiers = [];
 
-/* JSONP */
+/* ===== JSONP ===== */
 function jsonp(p){
   return new Promise(r=>{
-    const cb="cb"+Math.random().toString(36).slice(2);
+    const cb="cb_"+Math.random().toString(36).substring(2);
     p.callback=cb;
     window[cb]=d=>{r(d);delete window[cb];s.remove();}
     const s=document.createElement("script");
@@ -98,121 +153,77 @@ function jsonp(p){
   });
 }
 
+/* ===== LOADING ===== */
 function showLoading(){
   loading.style.display="flex";
   setTimeout(()=>location.reload(),2000);
 }
 
-/* LOAD */
+/* ===== LOAD ===== */
 async function load(){
-  dossiers=await jsonp({action:"list"});
+  dossiers = await jsonp({action:"list"});
   list.innerHTML="";
-  createZone.innerHTML="";
 
-  if(role!=="civil"){
-    createZone.innerHTML=`<button onclick="openCreate()">➕ Créer un dossier médical</button><br><br>`;
+  if(mode==="medic"){
+    createZone.innerHTML = `
+      <button onclick="openCreate()">➕ Créer un dossier médical</button>
+      <br><br>
+    `;
   }
 
   dossiers.forEach(d=>{
-    if(role==="civil" && d.nom!==nomCivil) return;
-    list.innerHTML+=`<div class="dossier" onclick="openPop('${d.id}')">${d.nom}</div>`;
+    if(mode==="civil" && d.nom!==nomCivil) return;
+
+    list.innerHTML += `
+      <div class="dossier" onclick="openPop('${d.id}')">
+        ${d.nom}
+      </div>
+    `;
   });
 
-  if(role==="civil"){
-    const d=dossiers.find(x=>x.nom===nomCivil);
+  if(mode==="civil"){
+    const d = dossiers.find(x=>x.nom===nomCivil);
     if(d) openPop(d.id);
   }
 }
 
+/* ===== POP DOSSIER ===== */
 function openPop(id){
-  const d=dossiers.find(x=>x.id==id);
-  popName.innerText=d.nom;
-  popImg.src=d.photo;
+  const d = dossiers.find(x=>x.id==id);
+  popName.innerText = d.nom;
+  popImg.src = d.photo;
   entries.innerHTML="";
 
   d.entries.forEach(e=>{
     entries.innerHTML+=`
       <div class="entry ${e.type}">
-        <b>${e.type.toUpperCase()}</b><br>${e.texte}<br>
+        <b>${e.type.toUpperCase()}</b><br>
+        ${e.texte}<br>
         <small>${e.auteur} – ${e.date}</small>
-      </div>`;
+      </div>
+    `;
   });
 
-  if(role!=="civil") renderForm(id);
-  else addZone.innerHTML="";
+  if(mode==="medic"){
+    addZone.innerHTML=`
+      <select id="type">
+        <option value="soin">Fait de soin</option>
+        <option value="vaccin">Vaccin</option>
+        <option value="visite">Visite médicale</option>
+      </select>
+      <textarea id="text" placeholder="Détails"></textarea>
+      <button onclick="add('${id}')">Ajouter</button>
+    `;
+  }else addZone.innerHTML="";
 
   popup.style.display="flex";
 }
 
-function renderForm(id){
-  let options=`<option value="soin">Soins</option>`;
+function closePop(){ popup.style.display="none"; }
 
-  if(role==="medic-chef"){
-    options+=`
-      <option value="vaccin">Vaccin</option>
-      <option value="visite">Visite médicale</option>
-    `;
-  }
-
-  addZone.innerHTML=`
-    <select id="type" onchange="formChange()">${options}</select>
-    <div id="form"></div>
-    <button onclick="send('${id}')">Ajouter</button>
-  `;
-  formChange();
-}
-
-function formChange(){
-  const t=type.value;
-  if(t==="vaccin"){
-    form.innerHTML=`
-      <input id="v_nom" placeholder="Nom du vaccin">
-      <input id="v_dose" placeholder="N° Dose">
-      <input id="v_but" placeholder="But du vaccin">
-    `;
-  }
-  if(t==="soin"){
-    form.innerHTML=`
-      <textarea id="s_soin" placeholder="Récapitulatif des soins"></textarea>
-      <textarea id="s_blessure" placeholder="Récapitulatif des blessures"></textarea>
-      <input id="s_time" placeholder="Invalidation (optionnel)">
-    `;
-  }
-  if(t==="visite"){
-    form.innerHTML=`
-      <input id="m_doctor" placeholder="Nom du docteur">
-      <select id="m_result">
-        <option value="POSITIF">Positif</option>
-        <option value="NEGATIF">Négatif</option>
-      </select>
-    `;
-  }
-}
-
-function send(id){
-  let text="";
-  if(type.value==="vaccin"){
-    text=`Vaccin: ${v_nom.value}\nDose: ${v_dose.value}\nBut: ${v_but.value}`;
-  }
-  if(type.value==="soin"){
-    text=`Soins: ${s_soin.value}\nBlessures: ${s_blessure.value}`;
-    if(s_time.value) text+=`\nInvalidation: ${s_time.value}`;
-  }
-  if(type.value==="visite"){
-    text=`Docteur: ${m_doctor.value}\nRésultat: ${m_result.value}`;
-  }
-
-  jsonp({
-    action:"add",
-    id,
-    type:type.value,
-    text,
-    user
-  }).then(showLoading);
-}
-
-function openCreate(){createPop.style.display="flex";}
-function closeCreate(){createPop.style.display="none";}
+/* ===== CREATE DOSSIER ===== */
+function openCreate(){ createPop.style.display="flex"; }
+function closeCreate(){ createPop.style.display="none"; }
 
 function createDossier(){
   jsonp({
@@ -223,7 +234,16 @@ function createDossier(){
   }).then(showLoading);
 }
 
-function closePop(){popup.style.display="none";}
+/* ===== ADD ENTRY ===== */
+function add(id){
+  jsonp({
+    action:"add",
+    id,
+    type:type.value,
+    text:text.value,
+    user:user
+  }).then(showLoading);
+}
 
 load();
 </script>

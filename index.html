@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dossier Médical Militaire - Gestion</title>
+<style>
+:root{--primary:#e11d48;--primary-light:#fee2e2;--primary-dark:#991b1b;--border:#fecaca;--shadow:0 6px 18px rgba(225,29,72,0.08);--danger:#dc2626;--success:#16a34a;--warning:#ea580c}
+body{font-family:Inter,system-ui;margin:0;background:url('https://i.imgur.com/A6V1lhN.jpg') no-repeat center center fixed;background-size:cover;color:#1f1f1f;position:relative;min-height:100vh}
+body::before{content:"";position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.68);backdrop-filter:blur(4px);z-index:-1}
+header{background:linear-gradient(90deg,var(--primary),var(--primary-dark));color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 12px rgba(225,29,72,0.15);position:relative;z-index:10}
+header img{height:58px;border-radius:14px;box-shadow:0 3px 10px rgba(0,0,0,0.2)}
+header h1{margin:0;font-size:20px;font-weight:700}
+.logout-btn{background:#dc2626;color:white;padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;border:none;transition:0.2s}
+.logout-btn:hover{background:#b91c1c}
+.container{max-width:1200px;margin:28px auto;padding:16px;position:relative;z-index:5}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:24px}
+.card{background:rgba(255,255,255,0.88);padding:20px;border-radius:14px;box-shadow:var(--shadow);border:1px solid var(--border);backdrop-filter:blur(10px)}
+.menu button{display:block;width:100%;text-align:left;padding:12px;border:0;background:none;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:0.2s;font-weight:500}
+.menu button:hover{background:var(--primary-light);color:var(--primary)}
+.menu button.active{background:var(--primary);color:white;font-weight:600}
+label{display:block;margin-top:12px;font-weight:600;font-size:14px;color:var(--primary-dark)}
+input,select,textarea{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid var(--border);box-sizing:border-box;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(225,29,72,0.15)}
+textarea{min-height:100px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:200px}
+.actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+button.primary{background:var(--primary);color:white;padding:12px 18px;border:0;border-radius:10px;cursor:pointer;font-weight:600;transition:0.2s}
+button.primary:hover{background:var(--primary-dark)}
+button.success{background:var(--success);color:white}
+button.danger{background:var(--danger);color:white}
+button.ghost{background:transparent;border:1.5px solid var(--border);padding:12px 18px;border-radius:10px;cursor:pointer;font-weight:500;transition:0.2s}
+button.ghost:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-light)}
+.patient-item{padding:14px;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:0.2s;position:relative}
+.patient-item:hover{background:var(--primary-light);border-color:var(--primary)}
+.patient-item.validated{border-left:5px solid var(--success)}
+.patient-item.refused{border-left:5px solid var(--danger)}
+.patient-item.pending{border-left:5px solid var(--warning)}
+.status-badge{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;color:white}
+.validated .status-badge{background:var(--success)}
+.refused .status-badge{background:var(--danger)}
+.pending .status-badge{background:var(--warning)}
+.muted{color:#6b7280;font-size:13px}
+.report{white-space:pre-wrap;background:#fffafa;padding:18px;border-radius:12px;border:1px solid var(--border);font-family:monospace;font-size:14px;line-height:1.8}
+.validation-comment{background:#fff3cd;padding:12px;border-radius:8px;border-left:4px solid #f59e0b;margin:15px 0;font-style:italic;color:#92400e}
+.search-bar{margin:12px 0;padding:10px 14px;border-radius:10px;border:1px solid var(--border);font-size:14px}
+.invoice-item{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.invoice-item span{flex:1;min-width:100px;padding:6px 10px;background:var(--primary-light);border-radius:6px;font-size:13px}
+.invoice-item button{padding:4px 8px;font-size:12px;color:var(--danger)}
+.error{color:var(--danger);margin:10px 0;padding:12px;background:#fee;border:1px solid #fecaca;border-radius:10px;font-size:14px}
+.loading{text-align:center;color:#6b7280;padding:20px}
+.entry-item{padding:14px;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;position:relative}
+.entry-faits{border-left:5px solid #3b82f6}
+.entry-vaccin{border-left:5px solid var(--success)}
+.entry-visite-positive{border-left:5px solid var(--success)}
+.entry-visite-negative{border-left:5px solid var(--danger)}
+@media print{body::before{display:none}.grid{grid-template-columns:1fr}.card{box-shadow:none;border:1px solid #ddd}header,.menu,.actions button:not(#printReport){display:none}}
+</style>
+</head>
+<body>
+<header>
+  <img src="https://i.imgur.com/c9Upe50.png" alt="SAMS">
+  <h1>Dossier Médical Militaire - Gestion</h1>
+  <button id="logoutBtn" class="logout-btn">Déconnexion</button>
+</header>
+<div class="container">
+  <div class="grid">
+    <aside class="card">
+      <div class="menu">
+        <button id="nav-clockin">Prise de service</button>
+        <button id="nav-profile">Mon profil</button>
+        <button id="nav-tarifs">Tarifs & Codes Radio</button>
+        <hr style="margin:16px 0; border:none; border-top:1px solid #fecaca;">
+        <button id="nav-list" class="active">Liste dossiers</button>
+        <button id="nav-new">Nouveau dossier</button>
+      </div>
+      <input type="text" id="searchPatient" class="search-bar" placeholder="Rechercher un dossier...">
+      <div id="patientList"></div>
+    </aside>
+    <main>
+      <section id="view-list" class="card">
+        <h2>Liste des dossiers</h2>
+        <div id="listContent"><div class="loading">Connexion à la base de donnée..</div></div>
+      </section>
+      <section id="view-new" class="card" style="display:none;">
+        <h2 id="formTitle">Nouveau dossier</h2>
+        <form id="patientForm">
+          <div class="row">
+            <div class="col"><label>Prénom Nom ID du patient</label><input type="text" id="patientNameId" placeholder="ex: Jean Dupont #001" required></div>
+            <div class="col"><label>Lien photo carte d'identité (Imgur)</label><input type="url" id="photoLink" required></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Date de naissance</label><input type="date" id="dob"></div>
+            <div class="col"><label>Profession</label><input type="text" id="profession"></div>
+          </div>
+          <div class="row">
+            <div class="col"><label>Discord ID (pour codes)</label><input type="text" id="discordId" placeholder="ex: user#1234 ou ID numérique"></div>
+          </div>
+          <label>Antécédents médicaux (les 2 derniers)</label>
+          <textarea id="antecedents" placeholder="ex: Hypertension, Diabète"></textarea>
+          <div id="formError" class="error" style="display:none;"></div>
+          <div class="actions">
+            <button class="primary" type="submit">Enregistrer</button>
+            <button type="button" id="clearForm" class="ghost">Effacer</button>
+          </div>
+        </form>
+      </section>
+      <section id="view-dossier" class="card" style="display:none;">
+        <h2>Dossier médical</h2>
+        <div id="rapportContent" class="report"></div>
+        <div id="entriesList"></div>
+        <div class="actions" id="viewerActions" style="display:none;"></div>
+        <div class="actions">
+          <button id="addEntryBtn" class="primary">Ajouter entrée</button>
+          <button id="editPatient" class="ghost">Modifier</button>
+          <button id="deletePatient" class="danger ghost">Supprimer</button>
+          <button id="printReport" class="primary">Imprimer</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+const supabase = createClient("https://sevrfgivcpefyykuffti.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNldnJmZ2l2Y3BlZnl5a3VmZnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NDI1NTMsImV4cCI6MjA3ODUxODU1M30.YZnkSHsVWKQEhfU7xYfWyTFmtkM28Zuzdu7Y1sjBXQc")
+const userData = localStorage.getItem('sams_user')
+const viewOnlyData = localStorage.getItem('viewOnly')
+let isViewer = false
+if (viewOnlyData) {
+  isViewer = true
+  localStorage.removeItem('viewOnly')
+} else if (!userData) {
+  window.location.href = 'login.html'
+}
+const user = isViewer ? {permission: 'viewer'} : JSON.parse(userData)
+document.getElementById('logoutBtn').onclick = () => {
+  localStorage.removeItem('sams_user')
+  window.location.href = 'login.html'
+}
+if (!isViewer && user.permission === 'medic-chef') {
+  const menu = document.querySelector('.menu')
+  const adminBtn = document.createElement('button')
+  adminBtn.textContent = 'Admin Panel'
+  adminBtn.style.cssText = 'background:#1e40af;color:white;font-weight:600;margin-bottom:12px;'
+  adminBtn.onclick = () => window.location.href = 'admin.html' // Assumé existant si besoin
+  menu.insertBefore(adminBtn, menu.firstChild)
+}
+// Liens menu (adaptés si besoin)
+document.getElementById('nav-clockin').onclick = () => window.location.href = 'clockin.html'
+document.getElementById('nav-profile').onclick = () => window.location.href = 'profile.html'
+document.getElementById('nav-tarifs').onclick = () => window.location.href = 'tarifs.html'
+async function logAction(action, target, details) {
+  if (isViewer) return
+  await supabase.from('logs').insert({ user_id: user.id, username: user.user, action, target, details })
+}
+const views = { list: document.getElementById('view-list'), new: document.getElementById('view-new'), dossier: document.getElementById('view-dossier') }
+let dossiers = [], current = null, entries = []
+function formatDateTime(date) { return new Date(date).toLocaleString('fr-FR') }
+function show(view) {
+  Object.values(views).forEach(v => v.style.display = 'none')
+  views[view].style.display = 'block'
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'))
+  if (view !== 'dossier') document.getElementById(`nav-${view}`).classList.add('active')
+}
+async function loadDossiers() {
+  const { data, error } = await supabase.from('dossiers').select('*').order('id', { ascending: false })
+  if (error) { document.getElementById('listContent').innerHTML = `<div class="error">Erreur: ${error.message}</div>`; return }
+  dossiers = data || []
+  renderLists()
+  document.querySelector('.loading')?.remove()
+}
+function renderLists(filter = "") {
+  const filtered = dossiers.filter(p => (p.patientNameId || '').toLowerCase().includes(filter.toLowerCase()))
+  const listHTML = filtered.map(p => `
+    <div class="patient-item" onclick="openDossier(${p.id})">
+      <div><strong>${p.patientNameId}</strong><div class="muted">${p.profession || '—'}</div></div>
+    </div>
+  `).join('')
+  document.getElementById('patientList').innerHTML = listHTML
+  document.getElementById('listContent').innerHTML = listHTML || '<div class="muted">Aucun dossier</div>'
+}
+window.openDossier = async (id) => {
+  current = dossiers.find(p => p.id === id) || (await supabase.from('dossiers').select('*').eq('id', id)).data[0]
+  entries = (await supabase.from('entries').select('*').eq('dossier_id', id).order('added_at', { ascending: false })).data || []
+  show('dossier')
+  renderDossier()
+  if (isViewer) {
+    document.querySelectorAll('.actions button').forEach(b => b.style.display = 'none')
+    document.getElementById('printReport').style.display = 'block'
+  }
+}
+function renderDossier() {
+  const c = current
+  const created = c.createdAt ? `Créé le : ${formatDateTime(c.createdAt)}` : ''
+  const photo = c.photoLink ? `<img src="${c.photoLink}" alt="Carte d'identité" style="max-width:200px;border-radius:8px;margin-bottom:12px;">` : ''
+  document.getElementById('rapportContent').innerHTML = `${photo}<br>Prénom Nom ID du patient : ${c.patientNameId || ''}<br>Date de naissance : ${c.dob || ''}<br>Profession : ${c.profession || ''}<br>Antécédents médicaux : ${c.antecedents || ''}<br>Discord ID : ${c.discordId || ''}<br>${created}`
+  const entriesHTML = entries.map(e => {
+    const details = JSON.parse(e.content || '{}')
+    let className = 'entry-faits'
+    let badge = 'Faits de Soin'
+    let content = `Résumé blessures: ${details.blessures || ''}\nRésumé interventions: ${details.interventions || ''}\nTemps invalidation: ${details.invalidation || 'N/A'}`
+    if (e.type === 'vaccin') {
+      className = 'entry-vaccin'
+      badge = 'Vaccin'
+      content = `Nom: ${details.vaccinNom || ''}\nDose: ${details.dose || ''}\nBut: ${details.but || ''}`
+    } else if (e.type === 'visite_medicale') {
+      className = `entry-visite-${details.evaluation || 'positive'}`
+      badge = `Visite Médicale (${details.evaluation || 'positive'})`
+      content = `Médecin: ${details.medecinNom || ''}\nDate: ${details.date || ''}\nEvaluation: ${details.evaluation || ''}`
+    }
+    return `<div class="entry-item ${className}">
+      <span class="status-badge">${badge}</span>
+      <div class="report">${content}</div>
+      <div class="muted">Ajouté par: ${e.added_by} le ${formatDateTime(e.added_at)}</div>
+    </div>`
+  }).join('')
+  document.getElementById('entriesList').innerHTML = `<h3>Entrées</h3>${entriesHTML || '<div class="muted">Aucune entrée</div>'}`
+}
+document.getElementById('patientForm').onsubmit = async e => {
+  e.preventDefault()
+  const p = {
+    patientNameId: document.getElementById('patientNameId').value.trim(),
+    photoLink: document.getElementById('photoLink').value.trim(),
+    dob: document.getElementById('dob').value,
+    profession: document.getElementById('profession').value.trim(),
+    antecedents: document.getElementById('antecedents').value.trim(),
+    discordId: document.getElementById('discordId').value.trim(),
+    createdAt: current ? current.createdAt : new Date().toISOString()
+  }
+  try {
+    if (current) {
+      await supabase.from('dossiers').update(p).eq('id', current.id)
+      await logAction('update', 'dossier', `ID: ${current.id} | ${p.patientNameId}`)
+    } else {
+      const { data } = await supabase.from('dossiers').insert([p]).select()
+      await logAction('create', 'dossier', `ID: ${data[0].id} | ${p.patientNameId}`)
+    }
+    await loadDossiers(); alert("Dossier enregistré"); clearForm(); show('list')
+  } catch (err) {
+    document.getElementById('formError').textContent = err.message
+    document.getElementById('formError').style.display = 'block'
+  }
+}
+document.getElementById('deletePatient').onclick = async () => {
+  if (isViewer || !current || !confirm("Supprimer ce dossier ?")) return
+  await logAction('delete', 'dossier', `ID: ${current.id}`)
+  await supabase.from('dossiers').delete().eq('id', current.id)
+  await loadDossiers(); show('list')
+}
+document.getElementById('addEntryBtn').onclick = () => { if (isViewer || (user.permission !== 'medic' && user.permission !== 'medic-chef')) return; showEntryModal() }
+function showEntryModal() {
+  const types = user.permission === 'medic-chef' ? ['faits_de_soin', 'vaccin', 'visite_medicale'] : ['faits_de_soin']
+  const modal = document.createElement('div')
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000`
+  modal.innerHTML = `<div class="card" style="width:500px;max-height:80vh;overflow:auto"><h3 style="color:var(--primary)">Ajouter entrée</h3><label>Type</label><select id="entryType">${types.map(t => `<option value="${t}">${t.replace('_', ' ').toUpperCase()}</option>`).join('')}</select><div id="entryFields"></div><div class="actions" style="margin-top:16px"><button class="primary" onclick="saveEntry()">Enregistrer</button><button class="ghost" onclick="this.closest('[style*=fixed]').remove()">Annuler</button></div></div>`
+  document.body.appendChild(modal)
+  const entryType = document.getElementById('entryType')
+  const entryFields = document.getElementById('entryFields')
+  const updateFields = () => {
+    const type = entryType.value
+    let fields = ''
+    if (type === 'faits_de_soin') {
+      fields = `<label>Résumé des blessures</label><textarea id="blessures"></textarea><label>Résumé des interventions</label><textarea id="interventions"></textarea><label>Temps d'invalidation (optionnel)</label><input id="invalidation" placeholder="ex: 7 jours">`
+    } else if (type === 'vaccin') {
+      fields = `<label>Nom du vaccin</label><input id="vaccinNom"><label>N° de la dose</label><input id="dose" type="number"><label>But</label><textarea id="but"></textarea>`
+    } else if (type === 'visite_medicale') {
+      fields = `<label>Nom du médecin</label><input id="medecinNom"><label>Date</label><input id="date" type="date"><label>Evaluation</label><select id="evaluation"><option value="positive">Positive</option><option value="negative">Négative</option></select>`
+    }
+    entryFields.innerHTML = fields
+  }
+  entryType.onchange = updateFields
+  updateFields()
+}
+window.saveEntry = async () => {
+  const type = document.getElementById('entryType').value
+  let details = {}
+  if (type === 'faits_de_soin') {
+    details = {blessures: document.getElementById('blessures').value, interventions: document.getElementById('interventions').value, invalidation: document.getElementById('invalidation').value}
+  } else if (type === 'vaccin') {
+    details = {vaccinNom: document.getElementById('vaccinNom').value, dose: document.getElementById('dose').value, but: document.getElementById('but').value}
+  } else if (type === 'visite_medicale') {
+    details = {medecinNom: document.getElementById('medecinNom').value, date: document.getElementById('date').value, evaluation: document.getElementById('evaluation').value}
+  }
+  if (Object.keys(details).length === 0) return alert("Remplissez les champs")
+  const entry = {dossier_id: current.id, type, added_by: user.user, added_at: new Date().toISOString(), content: JSON.stringify(details)}
+  await supabase.from('entries').insert([entry])
+  await logAction('add_entry', 'dossier', `ID: ${current.id} | Type: ${type}`)
+  document.querySelector('[style*=fixed]')?.remove()
+  await openDossier(current.id)
+}
+function clearForm() { document.getElementById('patientForm').reset(); current = null; document.getElementById('formTitle').textContent = 'Nouveau dossier' }
+document.getElementById('editPatient').onclick = () => { if (isViewer || !current) return; show('new'); document.getElementById('formTitle').textContent = 'Modifier dossier'; ['patientNameId','photoLink','dob','profession','antecedents','discordId'].forEach(id => document.getElementById(id).value = current[id] || '') }
+document.getElementById('printReport').onclick = () => window.print()
+document.getElementById('searchPatient').oninput = e => renderLists(e.target.value)
+document.getElementById('nav-list').onclick = () => show('list')
+document.getElementById('nav-new').onclick = () => { if (isViewer) return; clearForm(); show('new') }
+if (viewOnlyData) {
+  const view = JSON.parse(viewOnlyData)
+  openDossier(view.id)
+} else {
+  loadDossiers()
+}
+</script>
+</body>
+</html>

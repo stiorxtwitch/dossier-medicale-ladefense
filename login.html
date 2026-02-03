@@ -2,7 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Connexion Médicale</title>
+<title>Accès Médical</title>
+
+<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
 
 <style>
 *{box-sizing:border-box}
@@ -22,8 +24,12 @@ body{
   padding:30px;
   border-radius:14px;
   box-shadow:0 0 40px rgba(0,0,0,.6);
+  text-align:center;
 }
-h2,h3{text-align:center;margin-bottom:15px}
+.logo{
+  width:120px;
+  margin-bottom:15px;
+}
 input,button{
   width:100%;
   padding:12px;
@@ -31,7 +37,11 @@ input,button{
   border-radius:8px;
   border:none;
 }
-input{background:#020617;color:white;border:1px solid #334155}
+input{
+  background:#020617;
+  color:white;
+  border:1px solid #334155;
+}
 button{
   background:#2563eb;
   color:white;
@@ -49,10 +59,13 @@ hr{
 }
 </style>
 </head>
+
 <body>
 
 <div class="card">
-  <h2>🩺 Accès Médical</h2>
+  <img src="https://i.imgur.com/ZtAo0te.png" class="logo" alt="Logo">
+
+  <h2>Service Médical</h2>
 
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Mot de passe">
@@ -60,7 +73,7 @@ hr{
 
   <hr>
 
-  <h3>👤 Accès citoyen</h3>
+  <h3>Accès citoyen</h3>
   <input id="nom" placeholder="Nom Prénom">
   <input id="code" placeholder="Code Discord">
   <button id="codeBtn" onclick="sendCode()">Recevoir le code</button>
@@ -74,7 +87,6 @@ function setLoading(btn,state){
   btn.disabled=state;
   btn.innerText=state?"Chargement...":btn.dataset.text;
 }
-
 document.querySelectorAll("button").forEach(b=>b.dataset.text=b.innerText);
 
 function login(){

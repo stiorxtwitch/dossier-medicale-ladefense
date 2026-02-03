@@ -2,96 +2,62 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Connexion Médicale</title>
+<title>Login Médical</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#0f172a;
-  color:#e5e7eb;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-.card {
-  background:#020617;
-  padding:25px;
-  border-radius:12px;
-  width:320px;
-}
-input, button {
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  border:none;
-  border-radius:6px;
-}
-button {
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
-}
-button.secondary {
-  background:#334155;
-}
+body{background:#0f172a;color:white;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:#020617;padding:25px;border-radius:12px;width:320px}
+input,button{width:100%;margin-top:10px;padding:10px;border-radius:6px;border:none}
+button{background:#2563eb;color:white}
 </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>🩺 Connexion Médic</h2>
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Mot de passe">
-  <button onclick="login()">Se connecter</button>
+<h2>Connexion</h2>
 
-  <hr style="margin:20px 0;">
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Mot de passe">
+<button onclick="login()">Se connecter</button>
 
-  <button class="secondary" onclick="viewer()">
-    👤 Visualiser mon dossier médical
-  </button>
+<hr>
+
+<h3>Accès citoyen</h3>
+<input id="nom" placeholder="Nom Prénom">
+<button onclick="sendCode()">Recevoir code</button>
+<input id="code" placeholder="Code Discord">
+<button onclick="verify()">Valider</button>
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyeo31L1H09ZbPy2AOmty1cYWbz_ffU1pAH0C9S6MjjNPdkw0rSCrKUCm9uFRsPVKaL/exec";
+const API="https://script.google.com/macros/s/AKfycbyuOiBP0pv6cKeHIYVPGaq-MaMVU0nL64eg_Kxoict3H8YE6zx16-oefEPLuX8IbTw4/exec";
 
 function login(){
-  fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"login",
-      username:username.value,
-      password:password.value
-    })
-  })
-  .then(r=>r.json())
-  .then(d=>{
-    if(!d.ok) return alert("Connexion refusée");
-    localStorage.setItem("user", username.value);
-    localStorage.setItem("permission", d.permission);
-    location.href="index.html";
-  });
+fetch(API,{method:"POST",body:JSON.stringify({
+action:"login",username:username.value,password:password.value
+})}).then(r=>r.json()).then(d=>{
+if(!d.ok) alert("Refusé");
+else{
+localStorage.setItem("user",username.value);
+localStorage.setItem("permission",d.permission);
+location.href="index.html";
+}});
 }
 
-function viewer(){
-  const nom = prompt("Nom Prénom");
-  if(!nom) return;
+function sendCode(){
+fetch(API,{method:"POST",body:JSON.stringify({
+action:"sendCode",nom:nom.value
+})}).then(()=>alert("Code envoyé sur Discord"));
+}
 
-  fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({action:"sendCode", nom})
-  }).then(()=>{
-    const code = prompt("Code reçu sur Discord");
-    fetch(API_URL,{
-      method:"POST",
-      body:JSON.stringify({action:"verify", nom, code})
-    })
-    .then(r=>r.json())
-    .then(d=>{
-      if(!d.ok) return alert("Code invalide");
-      localStorage.setItem("viewer", JSON.stringify(d));
-      location.href="index.html";
-    });
-  });
+function verify(){
+fetch(API,{method:"POST",body:JSON.stringify({
+action:"verify",nom:nom.value,code:code.value
+})}).then(r=>r.json()).then(d=>{
+if(!d.ok) alert("Code invalide");
+else{
+localStorage.setItem("viewer",JSON.stringify(d));
+location.href="index.html";
+}});
 }
 </script>
 

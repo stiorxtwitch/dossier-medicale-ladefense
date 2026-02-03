@@ -1,71 +1,156 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Dossiers</title>
+<title>Dossiers Médicaux</title>
+
+<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
+
 <style>
-body{background:#0d1117;color:white;font-family:Arial;padding:20px}
-.card{background:#161b22;padding:15px;border-radius:10px;margin-bottom:10px}
-button{padding:6px}
+body{
+  background:#0d1117;
+  color:white;
+  font-family:Arial;
+  padding:20px;
+}
+h2{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.card{
+  background:#161b22;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:12px;
+}
+.entry{
+  background:#0d1117;
+  padding:6px;
+  margin-top:5px;
+  border-radius:6px;
+  font-size:13px;
+}
+input,button{
+  padding:6px;
+  margin:4px 0;
+  border-radius:6px;
+  border:none;
+}
+input{
+  background:#0d1117;
+  color:white;
+  border:1px solid #30363d;
+}
+button{
+  background:#238636;
+  color:white;
+  cursor:pointer;
+}
+button:hover{
+  background:#2ea043;
+}
+img{
+  width:40px;
+}
 </style>
 </head>
+
 <body>
 
-<h2>Dossiers médicaux</h2>
+<h2>
+  <img src="https://i.imgur.com/ZtAo0te.png">
+  Dossiers médicaux
+</h2>
 
-<input id="nom" placeholder="Nom">
-<input id="photo" placeholder="Photo URL">
-<button onclick="newDossier()">Créer dossier</button>
+<!-- CRÉATION DOSSIER -->
+<div class="card">
+  <h4>Créer un dossier</h4>
+  <input id="nom" placeholder="Nom">
+  <input id="photo" placeholder="URL photo (Imgur)">
+  <button onclick="newDossier()">Créer</button>
+</div>
 
 <div id="list"></div>
 
 <script>
-const WEB_APP="https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
-const user=localStorage.user||"inconnu";
+const WEB_APP = "https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
+const user = localStorage.user || "inconnu";
 
-function jsonp(p){
-  return new Promise(r=>{
-    const cb="cb"+Math.random();
-    p.callback=cb;
-    window[cb]=d=>{r(d);delete window[cb];};
-    const s=document.createElement("script");
-    s.src=WEB_APP+"?"+new URLSearchParams(p);
-    document.body.appendChild(s);
+/* ===== JSONP ===== */
+function jsonp(params){
+  return new Promise(resolve=>{
+    const cb = "cb_" + Math.random().toString(36).substring(2);
+    params.callback = cb;
+
+    window[cb] = data => {
+      resolve(data);
+      delete window[cb];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src = WEB_APP + "?" + new URLSearchParams(params);
+    document.body.appendChild(script);
   });
 }
 
+/* ===== LOAD ===== */
 async function load(){
-  const d=await jsonp({action:"list"});
-  list.innerHTML="";
-  d.forEach(x=>{
-    let h=`<div class="card"><b>${x.nom}</b>`;
-    x.entries.forEach(e=>{
-      h+=`<div>${e.type} – ${e.auteur} – ${e.date}</div>`;
+  const data = await jsonp({ action:"list" });
+  list.innerHTML = "";
+
+  data.forEach(d=>{
+    let html = `
+      <div class="card">
+        <h3>${d.nom}</h3>
+        <img src="${d.photo}" width="120"><br>
+    `;
+
+    d.entries.forEach(e=>{
+      html += `
+        <div class="entry">
+          <b>${e.type}</b> — ${e.auteur}<br>
+          ${e.texte}<br>
+          <small>${e.date}</small>
+        </div>
+      `;
     });
-    h+=`
-    <input placeholder="Type" id="t${x.id}">
-    <input placeholder="Texte" id="c${x.id}">
-    <button onclick="add('${x.id}')">Ajouter</button>
-    </div>`;
-    list.innerHTML+=h;
+
+    html += `
+      <input id="t${d.id}" placeholder="Type (soin, vaccin...)">
+      <input id="c${d.id}" placeholder="Contenu">
+      <button onclick="add('${d.id}')">Ajouter</button>
+      </div>
+    `;
+
+    list.innerHTML += html;
   });
 }
 
+/* ===== NEW DOSSIER ===== */
 function newDossier(){
-  jsonp({action:"new", nom:nom.value, photo:photo.value}).then(load);
+  if(!nom.value) return alert("Nom requis");
+  jsonp({
+    action:"new",
+    nom:nom.value,
+    photo:photo.value
+  }).then(load);
 }
 
+/* ===== ADD ENTRY ===== */
 function add(id){
   jsonp({
     action:"add",
-    id,
+    id:id,
     type:document.getElementById("t"+id).value,
     text:document.getElementById("c"+id).value,
-    user
+    user:user
   }).then(load);
 }
 
 load();
 </script>
+
 </body>
 </html>

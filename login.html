@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
+<title>Connexion médicale</title>
+
+<link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
 
 <style>
 body{
   background:#0d1117;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   display:flex;
   justify-content:center;
   align-items:center;
@@ -17,87 +19,126 @@ body{
 .box{
   background:#161b22;
   padding:25px;
-  width:330px;
+  width:340px;
   border-radius:12px;
   text-align:center;
+  box-shadow:0 0 15px rgba(0,0,0,0.6);
 }
 img{
-  width:80px;
+  width:90px;
   margin-bottom:10px;
 }
+h3{margin:10px 0}
 input,button{
   width:100%;
   padding:10px;
   margin:6px 0;
   border-radius:6px;
   border:none;
+  font-size:14px;
+}
+input{
+  background:#0d1117;
+  color:white;
+  border:1px solid #30363d;
 }
 button{
   background:#238636;
   color:white;
   cursor:pointer;
 }
+button:hover{
+  background:#2ea043;
+}
+hr{
+  border:0;
+  border-top:1px solid #30363d;
+  margin:15px 0;
+}
 </style>
 </head>
+
 <body>
 
 <div class="box">
   <img src="https://i.imgur.com/ZtAo0te.png">
-  <h3>Connexion</h3>
+  <h3>Connexion Médicale</h3>
 
+  <!-- LOGIN MEDIC -->
   <input id="u" placeholder="Username">
   <input id="p" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+  <button onclick="login()">Se connecter</button>
 
   <hr>
 
-  <input id="nom" placeholder="Nom dossier">
-  <button onclick="sendCode()">Recevoir code</button>
+  <!-- ACCÈS CIVIL -->
+  <input id="nom" placeholder="Nom du dossier">
+  <button onclick="sendCode()">Recevoir un code</button>
 
-  <input id="code" placeholder="Code">
-  <button onclick="verify()">Accéder</button>
+  <input id="code" placeholder="Code reçu">
+  <button onclick="verify()">Accéder au dossier</button>
 </div>
 
 <script>
 const WEB_APP = "https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
 
-function jsonp(p){
-  return new Promise(r=>{
-    const cb="cb"+Math.random();
-    p.callback=cb;
-    window[cb]=d=>{r(d);delete window[cb];};
-    const s=document.createElement("script");
-    s.src=WEB_APP+"?"+new URLSearchParams(p);
-    document.body.appendChild(s);
+/* ===== JSONP SAFE ===== */
+function jsonp(params){
+  return new Promise(resolve=>{
+    const cb = "cb_" + Math.random().toString(36).substring(2);
+    params.callback = cb;
+
+    window[cb] = data => {
+      resolve(data);
+      delete window[cb];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src = WEB_APP + "?" + new URLSearchParams(params);
+    document.body.appendChild(script);
   });
 }
 
+/* ===== LOGIN ===== */
 async function login(){
   const r = await jsonp({
     action:"login",
     username:u.value,
     password:p.value
   });
+
   if(r.ok){
-    localStorage.user=u.value;
-    location="index.html";
-  }else alert("Erreur login");
+    localStorage.user = u.value;
+    location.href = "index.html";
+  }else{
+    alert("Identifiants incorrects");
+  }
 }
 
+/* ===== DISCORD CODE ===== */
 function sendCode(){
-  jsonp({action:"sendCode", nom:nom.value});
-  alert("Code envoyé");
+  if(!nom.value) return alert("Nom requis");
+  jsonp({ action:"sendCode", nom:nom.value });
+  alert("Code envoyé sur Discord");
 }
 
+/* ===== VERIFY ===== */
 async function verify(){
   const r = await jsonp({
     action:"verify",
     nom:nom.value,
     code:code.value
   });
-  if(r.ok) location="index.html";
-  else alert("Code invalide");
+
+  if(r.ok){
+    localStorage.user = nom.value;
+    location.href = "index.html";
+  }else{
+    alert("Code invalide ou expiré");
+  }
 }
 </script>
+
 </body>
 </html>

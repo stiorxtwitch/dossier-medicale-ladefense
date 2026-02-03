@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Connexion médicale</title>
+<title>Accès médical militaire</title>
 
 <link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
 
@@ -18,22 +18,28 @@ body{
 }
 .box{
   background:#161b22;
-  padding:25px;
-  width:340px;
-  border-radius:12px;
+  padding:28px;
+  width:360px;
+  border-radius:14px;
   text-align:center;
-  box-shadow:0 0 15px rgba(0,0,0,0.6);
+  box-shadow:0 0 20px rgba(0,0,0,0.7);
 }
 img{
   width:90px;
   margin-bottom:10px;
 }
-h3{margin:10px 0}
+h2{
+  margin-bottom:15px;
+  letter-spacing:1px;
+}
+.section{
+  margin-top:15px;
+}
 input,button{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border-radius:6px;
+  border-radius:8px;
   border:none;
   font-size:14px;
 }
@@ -53,7 +59,10 @@ button:hover{
 hr{
   border:0;
   border-top:1px solid #30363d;
-  margin:15px 0;
+  margin:18px 0;
+}
+small{
+  color:#8b949e;
 }
 </style>
 </head>
@@ -62,21 +71,27 @@ hr{
 
 <div class="box">
   <img src="https://i.imgur.com/ZtAo0te.png">
-  <h3>Connexion Médicale</h3>
+  <h2>Dossier Médical</h2>
 
-  <!-- LOGIN MEDIC -->
-  <input id="u" placeholder="Username">
-  <input id="p" type="password" placeholder="Password">
-  <button onclick="login()">Se connecter</button>
+  <!-- MEDIC LOGIN -->
+  <div class="section">
+    <small>Accès personnel médical</small>
+    <input id="u" placeholder="Username">
+    <input id="p" type="password" placeholder="Password">
+    <button onclick="loginMedic()">Connexion Medic</button>
+  </div>
 
   <hr>
 
-  <!-- ACCÈS CIVIL -->
-  <input id="nom" placeholder="Nom du dossier">
-  <button onclick="sendCode()">Recevoir un code</button>
+  <!-- CIVIL ACCESS -->
+  <div class="section">
+    <small>Accès personnel (civil)</small>
+    <input id="nom" placeholder="Nom / Prénom">
+    <button onclick="sendCode()">Recevoir un code</button>
 
-  <input id="code" placeholder="Code reçu">
-  <button onclick="verify()">Accéder au dossier</button>
+    <input id="code" placeholder="Code reçu">
+    <button onclick="verify()">Accéder à mon dossier</button>
+  </div>
 </div>
 
 <script>
@@ -100,8 +115,8 @@ function jsonp(params){
   });
 }
 
-/* ===== LOGIN ===== */
-async function login(){
+/* ===== MEDIC LOGIN ===== */
+async function loginMedic(){
   const r = await jsonp({
     action:"login",
     username:u.value,
@@ -109,21 +124,22 @@ async function login(){
   });
 
   if(r.ok){
+    localStorage.mode = "medic";
     localStorage.user = u.value;
     location.href = "index.html";
   }else{
-    alert("Identifiants incorrects");
+    alert("Identifiants invalides");
   }
 }
 
-/* ===== DISCORD CODE ===== */
+/* ===== SEND CODE ===== */
 function sendCode(){
   if(!nom.value) return alert("Nom requis");
   jsonp({ action:"sendCode", nom:nom.value });
   alert("Code envoyé sur Discord");
 }
 
-/* ===== VERIFY ===== */
+/* ===== VERIFY CIVIL ===== */
 async function verify(){
   const r = await jsonp({
     action:"verify",
@@ -132,6 +148,8 @@ async function verify(){
   });
 
   if(r.ok){
+    localStorage.mode = "civil";
+    localStorage.nomCivil = nom.value;
     localStorage.user = nom.value;
     location.href = "index.html";
   }else{

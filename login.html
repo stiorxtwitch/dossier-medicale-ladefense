@@ -1,31 +1,35 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Connexion</title>
+<title>Login</title>
 
 <style>
 body{
-  background:#0e1117;
-  color:white;
-  font-family:Arial, sans-serif;
+  background:#0d1117;
+  font-family:Arial;
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
+  color:white;
 }
 .box{
   background:#161b22;
   padding:25px;
-  border-radius:10px;
-  width:320px;
+  width:330px;
+  border-radius:12px;
   text-align:center;
 }
-input, button{
+img{
+  width:80px;
+  margin-bottom:10px;
+}
+input,button{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border-radius:5px;
+  border-radius:6px;
   border:none;
 }
 button{
@@ -33,98 +37,67 @@ button{
   color:white;
   cursor:pointer;
 }
-hr{margin:15px 0}
 </style>
 </head>
 <body>
 
 <div class="box">
-  <h2>Connexion</h2>
+  <img src="https://i.imgur.com/ZtAo0te.png">
+  <h3>Connexion</h3>
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="doLogin()">Login</button>
+  <input id="u" placeholder="Username">
+  <input id="p" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
 
   <hr>
 
-  <input id="nom" placeholder="Nom Prénom">
-  <button onclick="sendCode()">Recevoir code Discord</button>
+  <input id="nom" placeholder="Nom dossier">
+  <button onclick="sendCode()">Recevoir code</button>
 
-  <input id="code" placeholder="Code reçu">
+  <input id="code" placeholder="Code">
   <button onclick="verify()">Accéder</button>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzvaXkIvVMv42UCmKeOlYJknf-mYENumbDlAJdvwxtEvid2fS3NDsoqL4HOgu1kfBWD/exec";
+const WEB_APP = "https://script.google.com/macros/s/AKfycbwdBvKtH8-PWY8ofofan8v9qJXLDrmztzAODRmgpj3qDSLWvB60SJY1lCYpLMLavu4/exec";
 
-/* ======================
-   JSONP CORE
-====================== */
-function jsonp(params){
-  const cb = "cb_" + Math.random().toString(36).substring(2);
-  params.callback = cb;
-
-  return new Promise(resolve=>{
-    window[cb] = data => {
-      resolve(data);
-      delete window[cb];
-    };
-
-    const s = document.createElement("script");
-    s.src = API + "?" + new URLSearchParams(params).toString();
+function jsonp(p){
+  return new Promise(r=>{
+    const cb="cb"+Math.random();
+    p.callback=cb;
+    window[cb]=d=>{r(d);delete window[cb];};
+    const s=document.createElement("script");
+    s.src=WEB_APP+"?"+new URLSearchParams(p);
     document.body.appendChild(s);
   });
 }
 
-/* ======================
-   LOGIN
-====================== */
-async function doLogin(){
+async function login(){
   const r = await jsonp({
     action:"login",
-    username: username.value,
-    password: password.value
+    username:u.value,
+    password:p.value
   });
-
   if(r.ok){
-    localStorage.setItem("user", username.value);
-    localStorage.setItem("perm", r.permission);
-    alert("Connecté !");
-    location.href = "index.html";
-  } else {
-    alert("Identifiants incorrects");
-  }
+    localStorage.user=u.value;
+    location="index.html";
+  }else alert("Erreur login");
 }
 
-/* ======================
-   CODE DISCORD
-====================== */
-async function sendCode(){
-  await jsonp({
-    action:"sendCode",
-    nom: nom.value
-  });
-  alert("Code envoyé sur Discord");
+function sendCode(){
+  jsonp({action:"sendCode", nom:nom.value});
+  alert("Code envoyé");
 }
 
-/* ======================
-   VERIFY
-====================== */
 async function verify(){
   const r = await jsonp({
     action:"verify",
-    nom: nom.value,
-    code: code.value
+    nom:nom.value,
+    code:code.value
   });
-
-  if(r.ok){
-    localStorage.setItem("viewer", nom.value);
-    location.href = "index.html";
-  } else {
-    alert("Code invalide");
-  }
+  if(r.ok) location="index.html";
+  else alert("Code invalide");
 }
 </script>
-
 </body>
 </html>

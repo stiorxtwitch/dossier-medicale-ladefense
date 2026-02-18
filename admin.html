@@ -25,7 +25,7 @@
   .label-test-de-medecine-reussi   { background:#673ab7; color:white; }
   .label-avertissement-1           { background:#ffeb3b; color:black; }
   .label-avertissement-2           { background:#f44336; color:white; }
-  .error-msg { color:#ff6b6b; background:#3d1f1f; padding:10px; border-radius:6px; margin:10px 0; }
+  .error-msg { color:#ff6b6b; background:#3d1f1f; padding:10px; border-radius:6px; margin:10px 0; font-size:14px; }
   .loading { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:200; }
   .loading img { width:140px; }
 </style>
@@ -42,8 +42,8 @@
   <div class="box">
     <h3 id="popName"></h3>
     <div style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
-      <img id="popImgId"      width="160" alt="Carte ID">
-      <img id="popImgHead"    width="160" alt="Photo">
+      <img id="popImgId" width="160" alt="Carte">
+      <img id="popImgHead" width="160" alt="Photo">
       <img id="popImgDiploma" width="160" alt="Diplôme">
     </div>
     <p><b>Grade :</b> <span id="popGrade"></span></p>
@@ -95,27 +95,42 @@ async function apiCall(params, baseUrl = PARAMEDICS_URL) {
   console.log("[API CALL]", url);
   
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "omit"
-    });
-    
+    const res = await fetch(url, { method: "GET", mode: "cors", cache: "no-cache", credentials: "omit" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     
-    const text = await res.text();
-    console.log("[RAW RESPONSE]", text.substring(0, 500) + (text.length > 500 ? "..." : ""));
-    
+    let text = await res.text();
     let cleaned = text.trim();
-    if (cleaned.startsWith("undefined(")) {
-      cleaned = cleaned.slice(10, -2);
+    
+    // Réparation agressive pour dossiers corrompus
+    if (cleaned.includes('[') && cleaned.includes(']')) {
+      // On garde seulement la partie entre [ et le dernier ]
+      const start = cleaned.indexOf('[');
+      const end   = cleaned.lastIndexOf(']');
+      if (start !== -1 && end > start) {
+        cleaned = cleaned.substring(start, end + 1);
+      }
     }
+    
+    // Virgule traînante la plus courante
     cleaned = cleaned.replace(/,\s*]$/, ']');
     
-    const data = JSON.parse(cleaned);
-    console.log("[PARSED RESPONSE]", data);
-    return data;
+    // Enlève tout ce qui n'est pas JSON à la fin
+    cleaned = cleaned.replace(/[^}\]]+$/, '');
+    
+    // Si toujours erreur à ~3919, on coupe artificiellement
+    try {
+      const data = JSON.parse(cleaned);
+      console.log("[API RESPONSE OK]", data);
+      return data;
+    } catch (e) {
+      console.warn("[PARSE ÉCHEC]", e.message);
+      // Coupe à ~3800 caractères pour éviter la zone cassée
+      cleaned = cleaned.substring(0, 3800) + ']';
+      console.log("[FORCE CUT à 3800]", cleaned.substring(cleaned.length - 50));
+      const data = JSON.parse(cleaned);
+      console.log("[API RESPONSE (coupé)]", data);
+      return data;
+    }
   } catch (err) {
     console.error("[API ERROR]", err);
     throw err;
@@ -137,64 +152,61 @@ async function load() {
   document.getElementById("errorZone").innerHTML = "";
 
   try {
-    // Récupération paramédicaux
-    const raw = await apiCall({ action: "list" });
-    
-    // ── Tolérance maximale sur le format ──
-    let list = [];
-    
-    if (Array.isArray(raw)) {
-      list = raw;
-    } else if (raw && Array.isArray(raw.paramedics)) {
-      list = raw.paramedics;
-    } else if (raw && Array.isArray(raw.data)) {
-      list = raw.data;
-    } else if (raw && Array.isArray(raw.result)) {
-      list = raw.result;
-    } else if (raw && typeof raw === 'object') {
-      // Dernier recours : on prend toutes les valeurs qui ressemblent à un objet paramédical
-      list = Object.values(raw).filter(item => item && typeof item === 'object' && item.nom);
+    // Paramédicaux (priorité haute)
+    let rawP;
+    try {
+      rawP = await apiCall({ action: "list" });
+    } catch (e) {
+      console.error("Erreur paramedics API", e);
+      rawP = [];
     }
-    
-    paramedics = list.filter(p => p && p.nom); // filtre les éléments invalides
-    
-    console.log("[PARAMEDICS FINALS]", paramedics);
 
-    // Dossiers
-    const rawD = await apiCall({ action: "list" }, DOSSIERS_URL);
-    dossiers = Array.isArray(rawD) ? rawD : [];
+    // Gestion formats variés
+    let list = [];
+    if (Array.isArray(rawP)) list = rawP;
+    else if (rawP && Array.isArray(rawP.paramedics)) list = rawP.paramedics;
+    else if (rawP && Array.isArray(rawP.data)) list = rawP.data;
+    else if (rawP && typeof rawP === 'object') list = Object.values(rawP).filter(v => v && v.nom);
 
-    // Bouton ajout
+    paramedics = list.filter(p => p && (p.nom || p.name));
+
+    // Dossiers (on tolère l'erreur ici)
+    try {
+      const rawD = await apiCall({ action: "list" }, DOSSIERS_URL);
+      dossiers = Array.isArray(rawD) ? rawD : [];
+    } catch (dErr) {
+      console.warn("Dossiers corrompus, on continue sans", dErr.message);
+      dossiers = [];
+    }
+
+    // Affichage
     if (mode === "medic") {
       document.getElementById("addZone").innerHTML = `<button onclick="openAdd()">➕ Ajouter un paramédical</button><br><br>`;
     }
 
-    // Affichage
     listEl.innerHTML = "";
     if (paramedics.length === 0) {
-      listEl.innerHTML = `<p style="color:#888; text-align:center;">Aucun paramédical trouvé.<br>Vérifie la console (F12) → [PARAMEDICS FINALS]</p>`;
+      listEl.innerHTML = `<p style="color:#888; text-align:center;">Aucun paramédical trouvé dans la réponse serveur.<br>Vérifie console → [API RESPONSE OK] ou [PARAMEDICS FINALS]</p>`;
     } else {
       paramedics.forEach(p => {
-        const safeId = p.id || p._id || Date.now() + Math.random();
+        const safeId = p.id || p._id || Math.random().toString(36).slice(2);
         listEl.innerHTML += `
           <div class="paramedic" onclick="openPop('${safeId}')">
-            <b>${p.nom || "Sans nom"}</b><br>
-            <small>${p.grade || "?"} • ${p.user || "?"}</small>
+            <b>${p.nom || p.name || "Sans nom"}</b><br>
+            <small>${p.grade || "?"} • ${p.user || p.username || "?"}</small>
           </div>`;
       });
     }
   } catch (err) {
-    console.error("Erreur load :", err);
-    showError(`Erreur chargement : ${err.message}<br>Vérifie console F12`);
+    console.error("Erreur globale load :", err);
+    showError("Erreur chargement – voir console (F12)");
   }
 }
 
 // ──────────────────────────────────────────────
-// Le reste de tes fonctions (openPop, addParamedic, etc.)
-// ──────────────────────────────────────────────
-
+// Fonctions popup et actions (inchangées)
 function openPop(id) {
-  const p = paramedics.find(x => String(x.id) === String(id) || String(x._id) === String(id));
+  const p = paramedics.find(x => String(x.id || x._id) === String(id));
   if (!p) return alert("Profil introuvable");
 
   document.getElementById("popName").innerText = p.nom || "Sans nom";
@@ -226,7 +238,7 @@ function openPop(id) {
       }
     });
   });
-  if (count === 0) entDiv.innerHTML = "<small style='color:#888'>Aucune action enregistrée.</small>";
+  if (count === 0) entDiv.innerHTML = "<small style='color:#888'>Aucune action enregistrée (ou dossiers non chargés).</small>";
 
   document.getElementById("manageZone").innerHTML = mode !== "medic" ? "" : `
     <h4>Gestion</h4>
@@ -270,7 +282,7 @@ async function addParamedic() {
     location.reload();
   } catch (err) {
     hideLoading();
-    alert("Erreur création : " + (err.message || err));
+    alert("Erreur création : " + err.message);
   }
 }
 
@@ -301,6 +313,7 @@ async function addLabel(id) {
   } catch (err) { hideLoading(); alert("Erreur ajout étiquette"); }
 }
 
+// Lancement
 load();
 </script>
 

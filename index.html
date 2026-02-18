@@ -126,7 +126,7 @@ async function loginMedic(){
   if(r.ok){
     localStorage.mode = "medic";
     localStorage.user = u.value;
-    location.href = "index.html";
+    location.href = "loged.html";
   }else{
     alert("Identifiants invalides");
   }
@@ -151,7 +151,7 @@ async function verify(){
     localStorage.mode = "civil";
     localStorage.nomCivil = nom.value;
     localStorage.user = nom.value;
-    location.href = "index.html";
+    location.href = "loeg.html";
   }else{
     alert("Code invalide ou expiré");
   }

@@ -5,129 +5,151 @@
 <title>Gestion des Paramédicaux</title>
 <link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
 <style>
-body{
-  background:#0d1117;
-  color:white;
-  font-family:Arial;
-  padding:20px;
-}
-h2{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-button{
-  background:#238636;
-  color:white;
-  border:none;
-  padding:8px;
-  border-radius:6px;
-  cursor:pointer;
-}
-button:hover{background:#2ea043}
-button.danger{
-  background:#da1e28;
-}
-button.danger:hover{background:#f44336}
-input,select,textarea{
-  width:100%;
-  padding:8px;
-  margin:5px 0;
-  border-radius:6px;
-  border:1px solid #30363d;
-  background:#0d1117;
-  color:white;
-}
-textarea{resize:none;height:70px}
-.paramedic{
-  background:#161b22;
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:10px;
-  cursor:pointer;
-}
-.popup{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.7);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:10;
-}
-.box{
-  background:#161b22;
-  padding:20px;
-  width:520px;
-  max-height:85vh;
-  overflow:auto;
-  border-radius:12px;
-}
-.entry{
-  padding:8px;
-  border-radius:6px;
-  margin-top:6px;
-  font-size:14px;
-}
-.soin{background:#7d1f1f}
-.vaccin{background:#1f3f7d}
-.visite{background:#1f7d3a}
-.label{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:4px;
-  margin:2px;
-  font-size:12px;
-}
-.label-suture{background:#4caf50;color:white;} /* Vert pour Formation Suture */
-.label-ecg{background:#2196f3;color:white;} /* Bleu pour Formation ECG */
-.label-uae{background:#ff9800;color:white;} /* Orange pour UAE Complète */
-.label-test{background:#673ab7;color:white;} /* Violet pour Test de médecine réussi */
-.label-avert1{background:#ffeb3b;color:black;} /* Jaune pour Avertissement 1 */
-.label-avert2{background:#f44336;color:white;} /* Rouge pour Avertissement 2 */
-.loading{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:20;
-}
-.loading img{
-  width:120px;
-}
+  body {
+    background: #0d1117;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    margin: 0;
+  }
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  button {
+    background: #238636;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button:hover { background: #2ea043; }
+  button.danger {
+    background: #c62828;
+  }
+  button.danger:hover { background: #d32f2f; }
+  input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: #0d1117;
+    color: white;
+    box-sizing: border-box;
+  }
+  textarea { resize: none; height: 80px; }
+  .paramedic {
+    background: #161b22;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .paramedic:hover { background: #1f2937; }
+  .popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+  .box {
+    background: #161b22;
+    padding: 24px;
+    width: 540px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+  }
+  .entry {
+    padding: 10px;
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  .soin   { background: #4a1f1f; }
+  .vaccin { background: #1f3f5a; }
+  .visite { background: #1f4a2f; }
+  .label {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin: 4px 4px 4px 0;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .label-suture          { background: #388e3c; color: white; }
+  .label-ecg             { background: #1976d2; color: white; }
+  .label-uae             { background: #f57c00; color: white; }
+  .label-test            { background: #7b1fa2; color: white; }
+  .label-avertissement-1 { background: #fbc02d; color: black; }
+  .label-avertissement-2 { background: #d32f2f; color: white; }
+  .error-msg {
+    color: #ff6b6b;
+    background: #3d1f1f;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 10px 0;
+  }
+  .loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  .loading img { width: 140px; }
 </style>
 </head>
 <body>
+
 <h2>
-  <img src="https://i.imgur.com/ZtAo0te.png" width="40">
+  <img src="https://i.imgur.com/ZtAo0te.png" width="40" alt="logo">
   Gestion des Paramédicaux
 </h2>
-<!-- BOUTON AJOUT (MEDIC CHEF SEULEMENT, ASSUME MODE MEDIC) -->
+
 <div id="addZone"></div>
 <div id="list"></div>
-<!-- POPUP PARAMEDIC -->
+
+<!-- POPUP PROFIL PARAMEDIC -->
 <div class="popup" id="popup">
   <div class="box">
     <h3 id="popName"></h3>
-    <img id="popImgId" width="150" alt="Carte d'identité"><br>
-    <img id="popImgHead" width="150" alt="Photo identité"><br>
-    <img id="popImgDiploma" width="150" alt="Diplôme"><br>
-    <p id="popGrade"></p>
-    <p id="popUser"></p>
-    <div id="labels"></div>
-    <h4>Interactions Médicales</h4>
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
+      <img id="popImgId"      width="160" alt="Carte d'identité">
+      <img id="popImgHead"    width="160" alt="Photo identité">
+      <img id="popImgDiploma" width="160" alt="Diplôme secourisme">
+    </div>
+    <p><b>Grade :</b> <span id="popGrade"></span></p>
+    <p><b>Username :</b> <span id="popUser"></span></p>
+    
+    <div id="labels" style="margin:16px 0;"></div>
+
+    <h4>Actions réalisées dans les dossiers médicaux</h4>
     <div id="entries"></div>
-    <div id="manageZone"></div>
-    <button onclick="closePop()">Fermer</button>
+
+    <div id="manageZone" style="margin-top:20px;"></div>
+
+    <button onclick="closePop()" style="margin-top:16px;">Fermer</button>
   </div>
 </div>
-<!-- POPUP AJOUT PARAMEDIC -->
+
+<!-- POPUP AJOUT -->
 <div class="popup" id="addPop">
   <div class="box">
     <h3>Ajouter un membre paramédical</h3>
-    <input id="a_nom" placeholder="Nom & Prénom du paramédic">
+    
+    <input id="a_nom"        placeholder="Nom & Prénom">
     <select id="a_grade">
       <option value="Médecin-Chef">Médecin-Chef</option>
       <option value="Médecin">Médecin</option>
@@ -135,163 +157,275 @@ textarea{resize:none;height:70px}
       <option value="Aide-Infirmier Militaire">Aide-Infirmier Militaire</option>
       <option value="Stagiaire Infirmier Militaire">Stagiaire Infirmier Militaire</option>
     </select>
-    <input id="a_user" placeholder="Username de la base de données">
-    <input id="a_photo_id" placeholder="URL Imgur (carte d'identité)">
-    <input id="a_photo_head" placeholder="URL Imgur (photo identité tête)">
-    <input id="a_photo_diploma" placeholder="URL Imgur (diplôme de premier secours)">
-    <button onclick="addParamedic()">Ajouter</button>
-    <button onclick="closeAdd()">Annuler</button>
+    <input id="a_user"       placeholder="Username (celui utilisé dans les dossiers médicaux)">
+    <input id="a_photo_id"      placeholder="URL Imgur – Carte d'identité">
+    <input id="a_photo_head"    placeholder="URL Imgur – Photo visage">
+    <input id="a_photo_diploma" placeholder="URL Imgur – Diplôme de secourisme">
+    
+    <div style="margin-top:16px;">
+      <button onclick="addParamedic()">Créer le profil</button>
+      <button onclick="closeAdd()" style="margin-left:8px;background:#424242;">Annuler</button>
+    </div>
   </div>
 </div>
+
 <!-- LOADING -->
 <div class="loading" id="loading">
-  <img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif">
+  <img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif" alt="chargement">
 </div>
-<script>
-const WEB_APP = "https://script.google.com/macros/s/AKfycbz86fNpd6GB8JIbHgTiz8FgpZiFj1c0Lbh62E0RXZwoINUB8ciUgztfYzZTvuQpAIXX/exec";
-const mode = localStorage.mode || "medic"; // Assume medic for this page
-let paramedics = [];
-let dossiers = []; // To cache medical dossiers for interactions
 
-/* ===== JSONP ===== */
-function jsonp(p){
-  return new Promise(r=>{
-    const cb="cb_"+Math.random().toString(36).substring(2);
-    p.callback=cb;
-    window[cb]=d=>{r(d);delete window[cb];s.remove();}
-    const s=document.createElement("script");
-    s.src=WEB_APP+"?"+new URLSearchParams(p);
-    document.body.appendChild(s);
+<script>
+// ──────────────────────────────────────────────
+// CONFIGURATION – CHANGE ICI SI BESOIN
+// ──────────────────────────────────────────────
+const WEB_APP_PARAMEDICS = "https://script.google.com/macros/s/AKfycbxMW8FmzRC3fTjicIos_8bOujfzWkXtCgirXwP4VoL_Z_ybyOWgA9QN8hEUUwbD-iSj/exec";
+const WEB_APP_DOSSIERS   = "https://script.google.com/macros/s/AKfycbz86fNpd6GB8JIbHgTiz8FgpZiFj1c0Lbh62E0RXZwoINUB8ciUgztfYzZTvuQpAIXX/exec";
+
+const mode = localStorage.mode || "medic"; // ou "civil" mais normalement medic ici
+let paramedics = [];
+let dossiers   = [];
+
+// ──────────────────────────────────────────────
+// JSONP helper
+// ──────────────────────────────────────────────
+function jsonp(params, baseUrl = WEB_APP_PARAMEDICS) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "jsonp_cb_" + Math.random().toString(36).substr(2);
+    params.callback = callbackName;
+
+    window[callbackName] = (data) => {
+      resolve(data);
+      delete window[callbackName];
+      script.remove();
+    };
+
+    const script = document.createElement("script");
+    script.src = baseUrl + "?" + new URLSearchParams(params);
+    script.onerror = () => {
+      reject(new Error("Erreur JSONP"));
+      delete window[callbackName];
+      script.remove();
+    };
+    document.body.appendChild(script);
   });
 }
 
-/* ===== LOADING ===== */
-function showLoading(){
-  loading.style.display="flex";
-  setTimeout(()=>location.reload(),2000);
+// ──────────────────────────────────────────────
+function showLoading() {
+  document.getElementById("loading").style.display = "flex";
+  setTimeout(() => location.reload(), 1800);
 }
 
-/* ===== LOAD ===== */
-async function load(){
-  paramedics = await jsonp({action:"list_paramedics"}); // Assume new action for paramedics list
-  dossiers = await jsonp({action:"list"}); // Fetch medical dossiers to filter interactions
-  list.innerHTML="";
-  if(mode==="medic"){
-    addZone.innerHTML = `
-      <button onclick="openAdd()">➕ Ajouter un membre paramédical</button>
-      <br><br>
-    `;
-  }
-  paramedics.forEach(p=>{
-    list.innerHTML += `
-      <div class="paramedic" onclick="openPop('${p.id}')">
-        ${p.nom} - ${p.grade}
+function hideLoading() {
+  document.getElementById("loading").style.display = "none";
+}
+
+// ──────────────────────────────────────────────
+async function load() {
+  const listEl = document.getElementById("list");
+  listEl.innerHTML = "<p style='color:#aaa'>Chargement...</p>";
+
+  try {
+    // 1. Charger les paramédicaux
+    const rawP = await jsonp({ action: "list" }, WEB_APP_PARAMEDICS);
+    console.log("[DEBUG] Réponse paramédicaux :", rawP);
+
+    paramedics = Array.isArray(rawP) ? rawP : (rawP?.paramedics || rawP?.data || []);
+
+    // 2. Charger les dossiers médicaux (pour voir les actions)
+    const rawD = await jsonp({ action: "list" }, WEB_APP_DOSSIERS);
+    console.log("[DEBUG] Réponse dossiers :", rawD);
+    dossiers = Array.isArray(rawD) ? rawD : [];
+
+    // Interface medic seulement
+    if (mode === "medic") {
+      document.getElementById("addZone").innerHTML = `
+        <button onclick="openAdd()">➕ Ajouter un paramédical</button>
+        <br><br>
+      `;
+    }
+
+    listEl.innerHTML = "";
+
+    if (paramedics.length === 0) {
+      listEl.innerHTML = `<p style="color:#888;text-align:center;">Aucun paramédical enregistré pour le moment.</p>`;
+      return;
+    }
+
+    paramedics.forEach(p => {
+      listEl.innerHTML += `
+        <div class="paramedic" onclick="openPop('${p.id}')">
+          <b>${p.nom || "Inconnu"}</b><br>
+          <small>${p.grade || "?"}</small>
+        </div>
+      `;
+    });
+
+  } catch (err) {
+    console.error("Erreur lors du chargement :", err);
+    listEl.innerHTML = `
+      <div class="error-msg">
+        Erreur de chargement des données.<br>
+        Vérifiez la console (F12) et l'URL du script.
       </div>
     `;
-  });
+  }
 }
 
-/* ===== POP PARAMEDIC ===== */
-function openPop(id){
-  const p = paramedics.find(x=>x.id==id);
-  popName.innerText = p.nom;
-  popImgId.src = p.photo_id;
-  popImgHead.src = p.photo_head;
-  popImgDiploma.src = p.photo_diploma;
-  popGrade.innerText = "Grade: " + p.grade;
-  popUser.innerText = "Username: " + p.user;
-  labels.innerHTML = "<h4>Étiquettes:</h4>";
-  p.labels.forEach(l=>{
-    const labelClass = l.toLowerCase().replace(/ /g,'-').replace(/é/g,'e').replace(/è/g,'e');
-    labels.innerHTML += `<span class="label label-${labelClass}">${l}</span>`;
+// ──────────────────────────────────────────────
+function openPop(id) {
+  const p = paramedics.find(x => x.id == id);
+  if (!p) return alert("Profil introuvable");
+
+  document.getElementById("popName").innerText = p.nom || "Sans nom";
+  document.getElementById("popImgId").src      = p.photo_id      || "";
+  document.getElementById("popImgHead").src    = p.photo_head    || "";
+  document.getElementById("popImgDiploma").src = p.photo_diploma || "";
+  document.getElementById("popGrade").innerText = p.grade || "?";
+  document.getElementById("popUser").innerText  = p.user  || "?";
+
+  // Labels / Étiquettes
+  const labelsDiv = document.getElementById("labels");
+  labelsDiv.innerHTML = "<b>Étiquettes :</b><br>";
+  (p.labels || []).forEach(label => {
+    const clean = label.toLowerCase()
+      .replace(/ /g, "-")
+      .replace(/é/g, "e")
+      .replace(/è/g, "e")
+      .replace(/û/g, "u");
+    labelsDiv.innerHTML += `<span class="label label-${clean}">${label}</span>`;
   });
-  // Filter interactions from dossiers
-  entries.innerHTML="";
-  let userEntries = [];
-  dossiers.forEach(d=>{
-    d.entries.forEach(e=>{
-      if(e.auteur === p.user){
-        userEntries.push(e);
+
+  // Actions réalisées (filtre par username)
+  const entriesDiv = document.getElementById("entries");
+  entriesDiv.innerHTML = "";
+
+  let count = 0;
+  dossiers.forEach(d => {
+    (d.entries || []).forEach(e => {
+      if (e.auteur === p.user) {
+        count++;
+        entriesDiv.innerHTML += `
+          <div class="entry ${e.type}">
+            <b>${e.type.toUpperCase()}</b><br>
+            ${e.texte || ""}<br>
+            <small>${e.date} – Dossier : ${d.nom || "?"}</small>
+          </div>
+        `;
       }
     });
   });
-  userEntries.forEach(e=>{
-    entries.innerHTML+=`
-      <div class="entry ${e.type}">
-        <b>${e.type.toUpperCase()}</b><br>
-        ${e.texte}<br>
-        <small>${e.date} - Dans le dossier de ${dossiers.find(d=>d.id==e.dossierId).nom || 'Inconnu'}</small>
-      </div>
-    `;
-  });
-  if(mode==="medic"){
-    manageZone.innerHTML=`
-      <h4>Gestion</h4>
-      <button class="danger" onclick="deleteParamedic('${id}')">Viré</button>
-      <select id="newGrade">
-        <option value="Médecin-Chef">Médecin-Chef</option>
-        <option value="Médecin">Médecin</option>
-        <option value="Infirmier Militaire">Infirmier Militaire</option>
-        <option value="Aide-Infirmier Militaire">Aide-Infirmier Militaire</option>
-        <option value="Stagiaire Infirmier Militaire">Stagiaire Infirmier Militaire</option>
-      </select>
-      <button onclick="promote('${id}')">Promouvoir</button>
-      <select id="newLabel">
-        <option value="Formation Suture">Formation Suture</option>
-        <option value="Formation ECG">Formation ECG</option>
-        <option value="UAE Complète">UAE Complète</option>
-        <option value="Test de médecine réussi">Test de médecine réussi</option>
-        <option value="Avertissement 1">Avertissement 1</option>
-        <option value="Avertissement 2">Avertissement 2</option>
-      </select>
-      <button onclick="addLabel('${id}')">Ajouter une étiquette</button>
-    `;
-  }else manageZone.innerHTML="";
-  popup.style.display="flex";
-}
-function closePop(){ popup.style.display="none"; }
 
-/* ===== ADD PARAMEDIC ===== */
-function openAdd(){ addPop.style.display="flex"; }
-function closeAdd(){ addPop.style.display="none"; }
-function addParamedic(){
-  jsonp({
-    action:"new_paramedic",
-    nom:a_nom.value,
-    grade:a_grade.value,
-    user:a_user.value,
-    photo_id:a_photo_id.value,
-    photo_head:a_photo_head.value,
-    photo_diploma:a_photo_diploma.value
-  }).then(showLoading);
+  if (count === 0) {
+    entriesDiv.innerHTML = "<small style='color:#888'>Aucune action enregistrée dans les dossiers médicaux.</small>";
+  }
+
+  // Zone gestion (medic seulement)
+  document.getElementById("manageZone").innerHTML = mode === "medic" ? `
+    <h4>Gestion du profil</h4>
+    <button class="danger" onclick="deleteParamedic('${id}')">Virer</button>
+
+    <select id="newGrade" style="width:auto; margin:0 8px;">
+      <option value="Médecin-Chef">Médecin-Chef</option>
+      <option value="Médecin">Médecin</option>
+      <option value="Infirmier Militaire">Infirmier Militaire</option>
+      <option value="Aide-Infirmier Militaire">Aide-Infirmier Militaire</option>
+      <option value="Stagiaire Infirmier Militaire">Stagiaire Infirmier Militaire</option>
+    </select>
+    <button onclick="promote('${id}')">Promouvoir / Changer grade</button>
+
+    <br><br>
+
+    <select id="newLabel" style="width:auto;">
+      <option value="Formation Suture">Formation Suture</option>
+      <option value="Formation ECG">Formation ECG</option>
+      <option value="UAE Complète">UAE Complète</option>
+      <option value="Test de médecine réussi">Test de médecine réussi</option>
+      <option value="Avertissement 1">Avertissement 1</option>
+      <option value="Avertissement 2">Avertissement 2</option>
+    </select>
+    <button onclick="addLabel('${id}')">Ajouter étiquette</button>
+  ` : "";
+
+  document.getElementById("popup").style.display = "flex";
 }
 
-/* ===== MANAGE ===== */
-function deleteParamedic(id){
-  if(confirm("Confirmer la suppression ?")){
-    jsonp({
-      action:"delete_paramedic",
-      id
-    }).then(showLoading);
+function closePop() {
+  document.getElementById("popup").style.display = "none";
+}
+
+// ──────────────────────────────────────────────
+function openAdd() {
+  document.getElementById("addPop").style.display = "flex";
+}
+function closeAdd() {
+  document.getElementById("addPop").style.display = "none";
+}
+
+async function addParamedic() {
+  const nom   = document.getElementById("a_nom").value.trim();
+  const grade = document.getElementById("a_grade").value;
+  const user  = document.getElementById("a_user").value.trim();
+
+  if (!nom || !user) {
+    alert("Nom et username obligatoires !");
+    return;
+  }
+
+  try {
+    await jsonp({
+      action:     "new_paramedic",
+      nom,
+      grade,
+      user,
+      photo_id:      document.getElementById("a_photo_id").value.trim(),
+      photo_head:    document.getElementById("a_photo_head").value.trim(),
+      photo_diploma: document.getElementById("a_photo_diploma").value.trim()
+    });
+    showLoading();
+  } catch (err) {
+    alert("Erreur lors de la création : " + err.message);
   }
 }
-function promote(id){
-  jsonp({
-    action:"promote",
-    id,
-    newGrade:newGrade.value
-  }).then(showLoading);
-}
-function addLabel(id){
-  jsonp({
-    action:"add_label",
-    id,
-    label:newLabel.value
-  }).then(showLoading);
+
+// ──────────────────────────────────────────────
+async function deleteParamedic(id) {
+  if (!confirm("Vraiment virer ce membre ?")) return;
+  try {
+    await jsonp({ action: "delete_paramedic", id });
+    showLoading();
+  } catch (err) {
+    alert("Erreur suppression");
+  }
 }
 
+async function promote(id) {
+  const newGrade = document.getElementById("newGrade").value;
+  try {
+    await jsonp({ action: "promote", id, newGrade });
+    showLoading();
+  } catch (err) {
+    alert("Erreur promotion");
+  }
+}
+
+async function addLabel(id) {
+  const label = document.getElementById("newLabel").value;
+  if (!label) return;
+  try {
+    await jsonp({ action: "add_label", id, label });
+    showLoading();
+  } catch (err) {
+    alert("Erreur ajout étiquette");
+  }
+}
+
+// ──────────────────────────────────────────────
 load();
 </script>
-<a href="https://stiorxtwitch.github.io/dossier-medicale-ladefense/guide.html" target="_blank">Guide</a>
+
+<br><br>
+<small><a href="https://stiorxtwitch.github.io/dossier-medicale-ladefense/guide.html" target="_blank" style="color:#aaa;">Guide</a></small>
+
 </body>
 </html>

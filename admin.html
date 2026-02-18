@@ -5,141 +5,55 @@
 <title>Gestion des Paramédicaux</title>
 <link rel="icon" href="https://i.imgur.com/ZtAo0te.png">
 <style>
-  body {
-    background: #0d1117;
-    color: white;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    margin: 0;
-  }
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  button {
-    background: #238636;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  button:hover { background: #2ea043; }
-  button.danger {
-    background: #c62828;
-  }
-  button.danger:hover { background: #d32f2f; }
-  input, select, textarea {
-    width: 100%;
-    padding: 8px;
-    margin: 6px 0;
-    border-radius: 6px;
-    border: 1px solid #30363d;
-    background: #0d1117;
-    color: white;
-    box-sizing: border-box;
-  }
-  textarea { resize: none; height: 80px; }
-  .paramedic {
-    background: #161b22;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .paramedic:hover { background: #1f2937; }
-  .popup {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-  }
-  .box {
-    background: #161b22;
-    padding: 24px;
-    width: 540px;
-    max-height: 88vh;
-    overflow-y: auto;
-    border-radius: 12px;
-    border: 1px solid #30363d;
-  }
-  .entry {
-    padding: 10px;
-    border-radius: 6px;
-    margin: 8px 0;
-    font-size: 14px;
-  }
-  .soin   { background: #4a1f1f; }
-  .vaccin { background: #1f3f5a; }
-  .visite { background: #1f4a2f; }
-  .label {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    margin: 4px 4px 4px 0;
-    font-size: 13px;
-    font-weight: 500;
-  }
-  .label-suture          { background: #388e3c; color: white; }
-  .label-ecg             { background: #1976d2; color: white; }
-  .label-uae             { background: #f57c00; color: white; }
-  .label-test            { background: #7b1fa2; color: white; }
-  .label-avertissement-1 { background: #fbc02d; color: black; }
-  .label-avertissement-2 { background: #d32f2f; color: white; }
-  .error-msg {
-    color: #ff6b6b;
-    background: #3d1f1f;
-    padding: 10px;
-    border-radius: 6px;
-    margin: 10px 0;
-  }
-  .loading {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 200;
-  }
-  .loading img { width: 140px; }
+  body { background:#0d1117; color:white; font-family:Arial; padding:20px; margin:0; }
+  h2 { display:flex; align-items:center; gap:10px; }
+  button { background:#238636; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+  button:hover { background:#2ea043; }
+  button.danger { background:#c62828; }
+  button.danger:hover { background:#d32f2f; }
+  input, select, textarea { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:white; box-sizing:border-box; }
+  textarea { resize:none; height:80px; }
+  .paramedic { background:#161b22; padding:12px; border-radius:10px; margin-bottom:10px; cursor:pointer; }
+  .paramedic:hover { background:#1f2937; }
+  .popup { position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; justify-content:center; align-items:center; z-index:100; }
+  .box { background:#161b22; padding:24px; width:540px; max-height:88vh; overflow-y:auto; border-radius:12px; border:1px solid #30363d; }
+  .entry { padding:10px; border-radius:6px; margin:8px 0; font-size:14px; }
+  .soin { background:#4a1f1f; } .vaccin { background:#1f3f5a; } .visite { background:#1f4a2f; }
+  .label { display:inline-block; padding:4px 10px; border-radius:12px; margin:4px 4px 4px 0; font-size:13px; font-weight:500; }
+  .label-suture { background:#388e3c; color:white; }
+  .label-ecg { background:#1976d2; color:white; }
+  .label-uae { background:#f57c00; color:white; }
+  .label-test { background:#7b1fa2; color:white; }
+  .label-avertissement-1 { background:#fbc02d; color:black; }
+  .label-avertissement-2 { background:#d32f2f; color:white; }
+  .error-msg { color:#ff6b6b; background:#3d1f1f; padding:10px; border-radius:6px; margin:10px 0; }
+  .loading { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; justify-content:center; align-items:center; z-index:200; }
+  .loading img { width:140px; }
 </style>
 </head>
 <body>
 
-<h2>
-  <img src="https://i.imgur.com/ZtAo0te.png" width="40" alt="logo">
-  Gestion des Paramédicaux
-</h2>
+<h2><img src="https://i.imgur.com/ZtAo0te.png" width="40"> Gestion des Paramédicaux</h2>
 
 <div id="addZone"></div>
 <div id="list"></div>
+<div id="errorZone"></div>
 
-<!-- POPUP PROFIL PARAMEDIC -->
+<!-- POPUP PROFIL -->
 <div class="popup" id="popup">
   <div class="box">
     <h3 id="popName"></h3>
     <div style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
-      <img id="popImgId"      width="160" alt="Carte d'identité">
-      <img id="popImgHead"    width="160" alt="Photo identité">
-      <img id="popImgDiploma" width="160" alt="Diplôme secourisme">
+      <img id="popImgId" width="160" alt="Carte ID">
+      <img id="popImgHead" width="160" alt="Photo">
+      <img id="popImgDiploma" width="160" alt="Diplôme">
     </div>
     <p><b>Grade :</b> <span id="popGrade"></span></p>
     <p><b>Username :</b> <span id="popUser"></span></p>
-    
     <div id="labels" style="margin:16px 0;"></div>
-
-    <h4>Actions réalisées dans les dossiers médicaux</h4>
+    <h4>Actions dans les dossiers médicaux</h4>
     <div id="entries"></div>
-
     <div id="manageZone" style="margin-top:20px;"></div>
-
     <button onclick="closePop()" style="margin-top:16px;">Fermer</button>
   </div>
 </div>
@@ -147,110 +61,82 @@
 <!-- POPUP AJOUT -->
 <div class="popup" id="addPop">
   <div class="box">
-    <h3>Ajouter un membre paramédical</h3>
-    
-    <input id="a_nom"        placeholder="Nom & Prénom">
+    <h3>Ajouter un paramédical</h3>
+    <input id="a_nom" placeholder="Nom & Prénom">
     <select id="a_grade">
-      <option value="Médecin-Chef">Médecin-Chef</option>
-      <option value="Médecin">Médecin</option>
-      <option value="Infirmier Militaire">Infirmier Militaire</option>
-      <option value="Aide-Infirmier Militaire">Aide-Infirmier Militaire</option>
-      <option value="Stagiaire Infirmier Militaire">Stagiaire Infirmier Militaire</option>
+      <option>Médecin-Chef</option>
+      <option>Médecin</option>
+      <option>Infirmier Militaire</option>
+      <option>Aide-Infirmier Militaire</option>
+      <option>Stagiaire Infirmier Militaire</option>
     </select>
-    <input id="a_user"       placeholder="Username (celui utilisé dans les dossiers médicaux)">
-    <input id="a_photo_id"      placeholder="URL Imgur – Carte d'identité">
-    <input id="a_photo_head"    placeholder="URL Imgur – Photo visage">
-    <input id="a_photo_diploma" placeholder="URL Imgur – Diplôme de secourisme">
-    
+    <input id="a_user" placeholder="Username (utilisé dans les dossiers)">
+    <input id="a_photo_id" placeholder="URL Imgur – Carte d'identité">
+    <input id="a_photo_head" placeholder="URL Imgur – Photo visage">
+    <input id="a_photo_diploma" placeholder="URL Imgur – Diplôme secourisme">
     <div style="margin-top:16px;">
-      <button onclick="addParamedic()">Créer le profil</button>
-      <button onclick="closeAdd()" style="margin-left:8px;background:#424242;">Annuler</button>
+      <button onclick="addParamedic()">Créer</button>
+      <button onclick="closeAdd()" style="margin-left:8px; background:#424242;">Annuler</button>
     </div>
   </div>
 </div>
 
-<!-- LOADING -->
-<div class="loading" id="loading">
-  <img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif" alt="chargement">
-</div>
+<div class="loading" id="loading"><img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif"></div>
 
 <script>
-// ──────────────────────────────────────────────
-// CONFIGURATION – CHANGE ICI SI BESOIN
-// ──────────────────────────────────────────────
-const WEB_APP_PARAMEDICS = "https://script.google.com/macros/s/AKfycbzc2xCLIMjerUUeq7dfk5Uaw-4sjtDaJVqpWURqe6ciREEjFi86BkLSLzbmjTwCDT77/exec";
-const WEB_APP_DOSSIERS   = "https://script.google.com/macros/s/AKfycbz86fNpd6GB8JIbHgTiz8FgpZiFj1c0Lbh62E0RXZwoINUB8ciUgztfYzZTvuQpAIXX/exec";
+// CONFIG
+const PARAMEDICS_URL = "https://script.google.com/macros/s/AKfycbzc2xCLIMjerUUeq7dfk5Uaw-4sjtDaJVqpWURqe6ciREEjFi86BkLSLzbmjTwCDT77/exec";
+const DOSSIERS_URL   = "https://script.google.com/macros/s/AKfycbz86fNpd6GB8JIbHgTiz8FgpZiFj1c0Lbh62E0RXZwoINUB8ciUgztfYzZTvuQpAIXX/exec";
 
-const mode = localStorage.mode || "medic"; // ou "civil" mais normalement medic ici
+const mode = localStorage.mode || "medic";
 let paramedics = [];
-let dossiers   = [];
+let dossiers = [];
 
-// ──────────────────────────────────────────────
-// JSONP helper
-// ──────────────────────────────────────────────
-function jsonp(params, baseUrl = WEB_APP_PARAMEDICS) {
-  return new Promise((resolve, reject) => {
-    const callbackName = "jsonp_cb_" + Math.random().toString(36).substr(2);
-    params.callback = callbackName;
-
-    window[callbackName] = (data) => {
-      resolve(data);
-      delete window[callbackName];
-      script.remove();
-    };
-
-    const script = document.createElement("script");
-    script.src = baseUrl + "?" + new URLSearchParams(params);
-    script.onerror = () => {
-      reject(new Error("Erreur JSONP"));
-      delete window[callbackName];
-      script.remove();
-    };
-    document.body.appendChild(script);
-  });
+// ─── API avec fetch ───
+async function apiCall(params, baseUrl = PARAMEDICS_URL) {
+  const url = baseUrl + "?" + new URLSearchParams(params);
+  console.log("[API CALL]", url);
+  
+  try {
+    const res = await fetch(url, { method: "GET", mode: "cors", cache: "no-cache", credentials: "omit" });
+    if (!res.ok) throw new Error(`HTTP ${res.status} – ${res.statusText}`);
+    const data = await res.json();
+    console.log("[API RESPONSE]", data);
+    return data;
+  } catch (err) {
+    console.error("[API ERROR]", err);
+    throw err;
+  }
 }
 
-// ──────────────────────────────────────────────
-function showLoading() {
-  document.getElementById("loading").style.display = "flex";
-  setTimeout(() => location.reload(), 1800);
+function showLoading() { document.getElementById("loading").style.display = "flex"; }
+function hideLoading() { document.getElementById("loading").style.display = "none"; }
+function showError(msg) {
+  document.getElementById("errorZone").innerHTML = `<div class="error-msg">${msg}</div>`;
 }
 
-function hideLoading() {
-  document.getElementById("loading").style.display = "none";
-}
-
-// ──────────────────────────────────────────────
+// ─── CHARGEMENT ───
 async function load() {
   const listEl = document.getElementById("list");
   listEl.innerHTML = "<p style='color:#aaa'>Chargement...</p>";
+  document.getElementById("errorZone").innerHTML = "";
 
   try {
-    // 1. Charger les paramédicaux
-    const rawP = await jsonp({ action: "list" }, WEB_APP_PARAMEDICS);
-    console.log("[DEBUG] Réponse paramédicaux :", rawP);
+    // Paramédicaux
+    const rawP = await apiCall({ action: "list" });
+    paramedics = Array.isArray(rawP) ? rawP : [];
 
-    paramedics = Array.isArray(rawP) ? rawP : (rawP?.paramedics || rawP?.data || []);
-
-    // 2. Charger les dossiers médicaux (pour voir les actions)
-    const rawD = await jsonp({ action: "list" }, WEB_APP_DOSSIERS);
-    console.log("[DEBUG] Réponse dossiers :", rawD);
+    // Dossiers (pour filtrer les actions)
+    const rawD = await apiCall({ action: "list" }, DOSSIERS_URL);
     dossiers = Array.isArray(rawD) ? rawD : [];
 
-    // Interface medic seulement
     if (mode === "medic") {
-      document.getElementById("addZone").innerHTML = `
-        <button onclick="openAdd()">➕ Ajouter un paramédical</button>
-        <br><br>
-      `;
+      document.getElementById("addZone").innerHTML = `<button onclick="openAdd()">➕ Ajouter un paramédical</button><br><br>`;
     }
 
-    listEl.innerHTML = "";
-
-    if (paramedics.length === 0) {
-      listEl.innerHTML = `<p style="color:#888;text-align:center;">Aucun paramédical enregistré pour le moment.</p>`;
-      return;
-    }
+    listEl.innerHTML = paramedics.length === 0
+      ? `<p style="color:#888; text-align:center;">Aucun paramédical enregistré.</p>`
+      : "";
 
     paramedics.forEach(p => {
       listEl.innerHTML += `
@@ -262,170 +148,130 @@ async function load() {
     });
 
   } catch (err) {
-    console.error("Erreur lors du chargement :", err);
-    listEl.innerHTML = `
-      <div class="error-msg">
-        Erreur de chargement des données.<br>
-        Vérifiez la console (F12) et l'URL du script.
-      </div>
-    `;
+    console.error("Erreur load :", err);
+    showError(`Erreur de chargement : ${err.message}<br>Vérifie la console (F12) et que le déploiement est "N'importe qui".`);
+    listEl.innerHTML = "";
   }
 }
 
-// ──────────────────────────────────────────────
+// ─── POPUP ───
 function openPop(id) {
   const p = paramedics.find(x => x.id == id);
   if (!p) return alert("Profil introuvable");
 
   document.getElementById("popName").innerText = p.nom || "Sans nom";
-  document.getElementById("popImgId").src      = p.photo_id      || "";
-  document.getElementById("popImgHead").src    = p.photo_head    || "";
-  document.getElementById("popImgDiploma").src = p.photo_diploma || "";
+  document.getElementById("popImgId").src      = p.photo_id      || "https://via.placeholder.com/160?text=ID";
+  document.getElementById("popImgHead").src    = p.photo_head    || "https://via.placeholder.com/160?text=Photo";
+  document.getElementById("popImgDiploma").src = p.photo_diploma || "https://via.placeholder.com/160?text=Diplôme";
   document.getElementById("popGrade").innerText = p.grade || "?";
   document.getElementById("popUser").innerText  = p.user  || "?";
 
-  // Labels / Étiquettes
-  const labelsDiv = document.getElementById("labels");
-  labelsDiv.innerHTML = "<b>Étiquettes :</b><br>";
-  (p.labels || []).forEach(label => {
-    const clean = label.toLowerCase()
-      .replace(/ /g, "-")
-      .replace(/é/g, "e")
-      .replace(/è/g, "e")
-      .replace(/û/g, "u");
-    labelsDiv.innerHTML += `<span class="label label-${clean}">${label}</span>`;
+  // Labels
+  const lblDiv = document.getElementById("labels");
+  lblDiv.innerHTML = "<b>Étiquettes :</b><br>";
+  (p.labels || []).forEach(l => {
+    const cls = l.toLowerCase().replace(/ /g,"-").replace(/é/g,"e").replace(/è/g,"e");
+    lblDiv.innerHTML += `<span class="label label-${cls}">${l}</span>`;
   });
 
-  // Actions réalisées (filtre par username)
-  const entriesDiv = document.getElementById("entries");
-  entriesDiv.innerHTML = "";
-
+  // Actions
+  const entDiv = document.getElementById("entries");
+  entDiv.innerHTML = "";
   let count = 0;
   dossiers.forEach(d => {
     (d.entries || []).forEach(e => {
       if (e.auteur === p.user) {
         count++;
-        entriesDiv.innerHTML += `
+        entDiv.innerHTML += `
           <div class="entry ${e.type}">
-            <b>${e.type.toUpperCase()}</b><br>
-            ${e.texte || ""}<br>
-            <small>${e.date} – Dossier : ${d.nom || "?"}</small>
-          </div>
-        `;
+            <b>${e.type.toUpperCase()}</b><br>${e.texte}<br>
+            <small>${e.date} – Dossier: ${d.nom||"?"}</small>
+          </div>`;
       }
     });
   });
+  if (count === 0) entDiv.innerHTML = "<small style='color:#888'>Aucune action enregistrée.</small>";
 
-  if (count === 0) {
-    entriesDiv.innerHTML = "<small style='color:#888'>Aucune action enregistrée dans les dossiers médicaux.</small>";
-  }
-
-  // Zone gestion (medic seulement)
-  document.getElementById("manageZone").innerHTML = mode === "medic" ? `
-    <h4>Gestion du profil</h4>
+  // Gestion
+  document.getElementById("manageZone").innerHTML = mode !== "medic" ? "" : `
+    <h4>Gestion</h4>
     <button class="danger" onclick="deleteParamedic('${id}')">Virer</button>
-
-    <select id="newGrade" style="width:auto; margin:0 8px;">
-      <option value="Médecin-Chef">Médecin-Chef</option>
-      <option value="Médecin">Médecin</option>
-      <option value="Infirmier Militaire">Infirmier Militaire</option>
-      <option value="Aide-Infirmier Militaire">Aide-Infirmier Militaire</option>
-      <option value="Stagiaire Infirmier Militaire">Stagiaire Infirmier Militaire</option>
+    <select id="newGrade" style="margin:0 8px;">
+      <option>Médecin-Chef</option><option>Médecin</option><option>Infirmier Militaire</option>
+      <option>Aide-Infirmier Militaire</option><option>Stagiaire Infirmier Militaire</option>
     </select>
-    <button onclick="promote('${id}')">Promouvoir / Changer grade</button>
-
-    <br><br>
-
-    <select id="newLabel" style="width:auto;">
-      <option value="Formation Suture">Formation Suture</option>
-      <option value="Formation ECG">Formation ECG</option>
-      <option value="UAE Complète">UAE Complète</option>
-      <option value="Test de médecine réussi">Test de médecine réussi</option>
-      <option value="Avertissement 1">Avertissement 1</option>
-      <option value="Avertissement 2">Avertissement 2</option>
+    <button onclick="promote('${id}')">Changer grade</button><br><br>
+    <select id="newLabel">
+      <option>Formation Suture</option><option>Formation ECG</option><option>UAE Complète</option>
+      <option>Test de médecine réussi</option><option>Avertissement 1</option><option>Avertissement 2</option>
     </select>
     <button onclick="addLabel('${id}')">Ajouter étiquette</button>
-  ` : "";
+  `;
 
   document.getElementById("popup").style.display = "flex";
 }
 
-function closePop() {
-  document.getElementById("popup").style.display = "none";
-}
+function closePop() { document.getElementById("popup").style.display = "none"; }
 
-// ──────────────────────────────────────────────
-function openAdd() {
-  document.getElementById("addPop").style.display = "flex";
-}
-function closeAdd() {
-  document.getElementById("addPop").style.display = "none";
-}
+// ─── AJOUT ───
+function openAdd() { document.getElementById("addPop").style.display = "flex"; }
+function closeAdd() { document.getElementById("addPop").style.display = "none"; }
 
 async function addParamedic() {
-  const nom   = document.getElementById("a_nom").value.trim();
-  const grade = document.getElementById("a_grade").value;
-  const user  = document.getElementById("a_user").value.trim();
+  const nom = document.getElementById("a_nom").value.trim();
+  const user = document.getElementById("a_user").value.trim();
+  if (!nom || !user) return alert("Nom et username obligatoires");
 
-  if (!nom || !user) {
-    alert("Nom et username obligatoires !");
-    return;
-  }
-
+  showLoading();
   try {
-    await jsonp({
-      action:     "new_paramedic",
+    await apiCall({
+      action: "new_paramedic",
       nom,
-      grade,
+      grade: document.getElementById("a_grade").value,
       user,
-      photo_id:      document.getElementById("a_photo_id").value.trim(),
-      photo_head:    document.getElementById("a_photo_head").value.trim(),
+      photo_id: document.getElementById("a_photo_id").value.trim(),
+      photo_head: document.getElementById("a_photo_head").value.trim(),
       photo_diploma: document.getElementById("a_photo_diploma").value.trim()
     });
-    showLoading();
+    location.reload();
   } catch (err) {
-    alert("Erreur lors de la création : " + err.message);
+    hideLoading();
+    alert("Erreur création : " + err.message);
   }
 }
 
-// ──────────────────────────────────────────────
+// ─── GESTION ───
 async function deleteParamedic(id) {
-  if (!confirm("Vraiment virer ce membre ?")) return;
+  if (!confirm("Confirmer ?")) return;
+  showLoading();
   try {
-    await jsonp({ action: "delete_paramedic", id });
-    showLoading();
-  } catch (err) {
-    alert("Erreur suppression");
-  }
+    await apiCall({ action: "delete_paramedic", id });
+    location.reload();
+  } catch (err) { hideLoading(); alert("Erreur suppression"); }
 }
 
 async function promote(id) {
-  const newGrade = document.getElementById("newGrade").value;
+  showLoading();
   try {
-    await jsonp({ action: "promote", id, newGrade });
-    showLoading();
-  } catch (err) {
-    alert("Erreur promotion");
-  }
+    await apiCall({ action: "promote", id, newGrade: document.getElementById("newGrade").value });
+    location.reload();
+  } catch (err) { hideLoading(); alert("Erreur"); }
 }
 
 async function addLabel(id) {
   const label = document.getElementById("newLabel").value;
   if (!label) return;
+  showLoading();
   try {
-    await jsonp({ action: "add_label", id, label });
-    showLoading();
-  } catch (err) {
-    alert("Erreur ajout étiquette");
-  }
+    await apiCall({ action: "add_label", id, label });
+    location.reload();
+  } catch (err) { hideLoading(); alert("Erreur"); }
 }
 
-// ──────────────────────────────────────────────
 load();
 </script>
 
-<br><br>
-<small><a href="https://stiorxtwitch.github.io/dossier-medicale-ladefense/guide.html" target="_blank" style="color:#aaa;">Guide</a></small>
+<br><a href="https://stiorxtwitch.github.io/dossier-medicale-ladefense/guide.html" target="_blank" style="color:#aaa;">Guide</a>
 
 </body>
 </html>

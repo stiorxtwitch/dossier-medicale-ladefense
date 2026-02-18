@@ -11,7 +11,7 @@
   button:hover { background:#2ea043; }
   button.danger { background:#c62828; }
   button.danger:hover { background:#d32f2f; }
-  input, select, textarea { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:white; box-sizing:border-box; }
+  input, select { width:100%; padding:8px; margin:6px 0; border-radius:6px; border:1px solid #30363d; background:#0d1117; color:white; box-sizing:border-box; }
   .paramedic { background:#161b22; padding:12px; border-radius:10px; margin-bottom:10px; cursor:pointer; }
   .paramedic:hover { background:#1f2937; }
   .popup { position:fixed; inset:0; background:rgba(0,0,0,0.75); display:none; justify-content:center; align-items:center; z-index:100; }
@@ -42,8 +42,8 @@
   <div class="box">
     <h3 id="popName"></h3>
     <div style="display:flex; gap:16px; flex-wrap:wrap; margin:16px 0;">
-      <img id="popImgId" width="160" alt="Carte">
-      <img id="popImgHead" width="160" alt="Photo">
+      <img id="popImgId"      width="160" alt="Carte ID">
+      <img id="popImgHead"    width="160" alt="Photo">
       <img id="popImgDiploma" width="160" alt="Diplôme">
     </div>
     <p><b>Grade :</b> <span id="popGrade"></span></p>
@@ -81,7 +81,7 @@
 <div class="loading" id="loading"><img src="https://www.pngmart.com/files/23/Loading-PNG-Photos.gif"></div>
 
 <script>
-// URLs
+// ──────────────────────────────────────────────
 const PARAMEDICS_URL = "https://script.google.com/macros/s/AKfycbwSgP5K8BpYMZf2gKSoFAh0lAshUjufN5Sgw40GKjH10rZizrB_g5uxexiBoTiXx-0/exec";
 const DOSSIERS_URL   = "https://script.google.com/macros/s/AKfycbz86fNpd6GB8JIbHgTiz8FgpZiFj1c0Lbh62E0RXZwoINUB8ciUgztfYzZTvuQpAIXX/exec";
 
@@ -89,57 +89,40 @@ const mode = localStorage.mode || "medic";
 let paramedics = [];
 let dossiers   = [];
 
+// ──────────────────────────────────────────────
 async function apiCall(params, baseUrl = PARAMEDICS_URL) {
   const url = baseUrl + "?" + new URLSearchParams(params);
   console.log("[API CALL]", url);
   
   try {
-    const res = await fetch(url, { method: "GET", mode: "cors", cache: "no-cache", credentials: "omit" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    const res = await fetch(url, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-cache",
+      credentials: "omit"
+    });
     
-    let text = await res.text();
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const text = await res.text();
+    console.log("[RAW RESPONSE]", text.substring(0, 500) + (text.length > 500 ? "..." : ""));
+    
     let cleaned = text.trim();
-    
-    // 1. Enlever wrapper JSONP résiduel
-    if (cleaned.startsWith("undefined(") || cleaned.startsWith("jsonp_cb_")) {
-      const start = cleaned.indexOf('[');
-      const end   = cleaned.lastIndexOf(']');
-      if (start !== -1 && end !== -1) {
-        cleaned = cleaned.substring(start, end + 1);
-        console.log("[FIX] Wrapper JSONP supprimé");
-      }
+    if (cleaned.startsWith("undefined(")) {
+      cleaned = cleaned.slice(10, -2);
     }
-    
-    // 2. Supprimer virgule traînante avant ]
     cleaned = cleaned.replace(/,\s*]$/, ']');
     
-    // 3. Enlever caractères invalides en fin (souvent cause de l'erreur à la position ~3918)
-    cleaned = cleaned.replace(/[^}\]]+$/, '');
-    
-    // 4. Dernière tentative de réparation : si toujours invalide, on coupe à la dernière virgule valide
-    try {
-      const data = JSON.parse(cleaned);
-      console.log("[API RESPONSE]", data);
-      return data;
-    } catch (parseErr) {
-      console.warn("[PARSE FAIL]", parseErr.message);
-      // On essaie de couper juste avant la zone problématique
-      const approxCut = cleaned.substring(0, 3918);
-      const lastComma = approxCut.lastIndexOf(',');
-      if (lastComma > 100) {
-        cleaned = approxCut.substring(0, lastComma) + ']';
-        console.log("[EMERGENCY CUT] Tronqué à la dernière virgule valide");
-      }
-      const data = JSON.parse(cleaned);
-      console.log("[API RESPONSE (réparé)]", data);
-      return data;
-    }
+    const data = JSON.parse(cleaned);
+    console.log("[PARSED RESPONSE]", data);
+    return data;
   } catch (err) {
     console.error("[API ERROR]", err);
     throw err;
   }
 }
 
+// ──────────────────────────────────────────────
 function showLoading() { document.getElementById("loading").style.display = "flex"; }
 function hideLoading() { document.getElementById("loading").style.display = "none"; }
 
@@ -147,40 +130,71 @@ function showError(msg) {
   document.getElementById("errorZone").innerHTML = `<div class="error-msg">${msg}</div>`;
 }
 
+// ──────────────────────────────────────────────
 async function load() {
-  document.getElementById("list").innerHTML = "<p style='color:#aaa'>Chargement...</p>";
+  const listEl = document.getElementById("list");
+  listEl.innerHTML = "<p style='color:#aaa'>Chargement...</p>";
   document.getElementById("errorZone").innerHTML = "";
 
   try {
-    const rawP = await apiCall({ action: "list" });
-    paramedics = Array.isArray(rawP) ? rawP : [];
+    // Récupération paramédicaux
+    const raw = await apiCall({ action: "list" });
+    
+    // ── Tolérance maximale sur le format ──
+    let list = [];
+    
+    if (Array.isArray(raw)) {
+      list = raw;
+    } else if (raw && Array.isArray(raw.paramedics)) {
+      list = raw.paramedics;
+    } else if (raw && Array.isArray(raw.data)) {
+      list = raw.data;
+    } else if (raw && Array.isArray(raw.result)) {
+      list = raw.result;
+    } else if (raw && typeof raw === 'object') {
+      // Dernier recours : on prend toutes les valeurs qui ressemblent à un objet paramédical
+      list = Object.values(raw).filter(item => item && typeof item === 'object' && item.nom);
+    }
+    
+    paramedics = list.filter(p => p && p.nom); // filtre les éléments invalides
+    
+    console.log("[PARAMEDICS FINALS]", paramedics);
 
+    // Dossiers
     const rawD = await apiCall({ action: "list" }, DOSSIERS_URL);
     dossiers = Array.isArray(rawD) ? rawD : [];
 
+    // Bouton ajout
     if (mode === "medic") {
       document.getElementById("addZone").innerHTML = `<button onclick="openAdd()">➕ Ajouter un paramédical</button><br><br>`;
     }
 
-    const listEl = document.getElementById("list");
-    listEl.innerHTML = paramedics.length === 0
-      ? `<p style="color:#888; text-align:center;">Aucun paramédical enregistré.</p>`
-      : "";
-
-    paramedics.forEach(p => {
-      listEl.innerHTML += `
-        <div class="paramedic" onclick="openPop('${p.id}')">
-          <b>${p.nom || "Inconnu"}</b><br><small>${p.grade || "?"}</small>
-        </div>`;
-    });
+    // Affichage
+    listEl.innerHTML = "";
+    if (paramedics.length === 0) {
+      listEl.innerHTML = `<p style="color:#888; text-align:center;">Aucun paramédical trouvé.<br>Vérifie la console (F12) → [PARAMEDICS FINALS]</p>`;
+    } else {
+      paramedics.forEach(p => {
+        const safeId = p.id || p._id || Date.now() + Math.random();
+        listEl.innerHTML += `
+          <div class="paramedic" onclick="openPop('${safeId}')">
+            <b>${p.nom || "Sans nom"}</b><br>
+            <small>${p.grade || "?"} • ${p.user || "?"}</small>
+          </div>`;
+      });
+    }
   } catch (err) {
     console.error("Erreur load :", err);
-    showError("Erreur de chargement – vérifie la console (F12)");
+    showError(`Erreur chargement : ${err.message}<br>Vérifie console F12`);
   }
 }
 
+// ──────────────────────────────────────────────
+// Le reste de tes fonctions (openPop, addParamedic, etc.)
+// ──────────────────────────────────────────────
+
 function openPop(id) {
-  const p = paramedics.find(x => x.id == id);
+  const p = paramedics.find(x => String(x.id) === String(id) || String(x._id) === String(id));
   if (!p) return alert("Profil introuvable");
 
   document.getElementById("popName").innerText = p.nom || "Sans nom";
@@ -254,7 +268,10 @@ async function addParamedic() {
       photo_diploma: document.getElementById("a_photo_diploma").value.trim()
     });
     location.reload();
-  } catch (err) { hideLoading(); alert("Erreur création"); }
+  } catch (err) {
+    hideLoading();
+    alert("Erreur création : " + (err.message || err));
+  }
 }
 
 async function deleteParamedic(id) {
